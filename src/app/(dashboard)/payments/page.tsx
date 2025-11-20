@@ -1,10 +1,10 @@
-import Products from "@/components/Dashboard/Products/Products";
+import Payments from "@/components/Dashboard/Payments/Payments";
 import React from "react";
 
 export default function page() {
   return (
     <div>
-      <Products />
+      <Payments />
     </div>
   );
 }

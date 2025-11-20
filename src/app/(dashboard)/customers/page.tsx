@@ -1,10 +1,10 @@
-import Products from "@/components/Dashboard/Products/Products";
+import Customer from "@/components/Dashboard/Customer/Customer";
 import React from "react";
 
 export default function page() {
   return (
     <div>
-      <Products />
+      <Customer />
     </div>
   );
 }
