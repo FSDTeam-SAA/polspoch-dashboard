@@ -17,11 +17,18 @@ export default function NotFound() {
           <h2 className="text-2xl md:text-3xl font-semibold mb-3 text-gray-800">
             Oops! Page Not Found
           </h2>
-          <p className="text-md md:text-lg mb-8 text-gray-600 text-center">
+          <p className="text-md md:text-lg mb-2 text-gray-600 text-center">
             Uh-oh! This route doesn’t exist.
             <br />
             Looks like you took a wrong turn.
           </p>
+
+          {/* Under construction message */}
+          <p className="text-sm md:text-base mb-8 text-gray-400 text-center">
+            ⚠️ This page is under construction. We’re working hard to bring it
+            to you soon!
+          </p>
+
           <Link href="/" className="flex justify-center">
             <Button
               variant="default"

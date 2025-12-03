@@ -12,10 +12,47 @@ import {
 import Link from "next/link";
 import { useProducts } from "@/lib/hooks/useProduct";
 import { Product } from "@/lib/types/product";
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Package,
+  Eye,
+  Edit,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { data: products, isLoading, error } = useProducts();
 
   const handleViewProduct = (product: Product) => {
@@ -23,261 +60,321 @@ export default function Products() {
     setIsModalOpen(true);
   };
 
+  const filteredProducts = products?.filter((product) =>
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-lg">Loading products...</p>
+      <div className="flex justify-center items-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-lg text-red-600">
-          Error loading products: {error.message}
-        </p>
+      <div className="flex flex-col justify-center items-center h-[60vh] text-destructive gap-2">
+        <AlertCircle className="h-8 w-8" />
+        <p className="text-lg font-medium">Error loading products</p>
+        <p className="text-sm text-muted-foreground">{error.message}</p>
       </div>
     );
   }
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Product List</h1>
 
-        <Link
-          href="/products/add-product"
-          className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer"
-        >
-          Add Product
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your product catalog and inventory.
+          </p>
+        </div>
+        <Link href="/products/add-product">
+          <Button className="shadow-sm cursor-pointer">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
         </Link>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="py-3 px-4 text-left">Image</th>
-              <th className="py-3 px-4 text-left">Product Name</th>
-              <th className="py-3 px-4 text-left">Family</th>
-              <th className="py-3 px-4 text-left">Features</th>
-              <th className="py-3 px-4 text-left">Range</th>
-              <th className="py-3 px-4 text-left">Status</th>
-              <th className="py-3 px-4 text-left">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700">
-            {products && products.length > 0 ? (
-              products.map((product) => (
-                <tr
-                  key={product._id}
-                  className="border-b border-gray-200 hover:bg-gray-100"
-                >
-                  <td className="py-3 px-4">
-                    {product.productImage && product.productImage.length > 0 ? (
-                      <Image
-                        width={50}
-                        height={50}
-                        src={product.productImage[0].url}
-                        alt={product.productName}
-                        className="w-12 h-12 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
-                        No Image
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="font-medium">{product.productName}</div>
-                    {product.unitSizeCustomizationNote && (
-                      <div className="text-xs text-gray-500">
-                        {product.unitSizeCustomizationNote}
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">{product.family}</td>
-                  <td className="py-3 px-4">
-                    {product.features.length} variant
-                    {product.features.length !== 1 ? "s" : ""}
-                  </td>
-                  <td className="py-3 px-4">
-                    {product.minRange}-{product.maxRange} {product.measureUnit}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        product.availabilityNote === "In stock"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
+
+      <Card className="shadow-sm border-border/50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Products</CardTitle>
+              <CardDescription>
+                A list of all products in your store including their name,
+                family, and status.
+              </CardDescription>
+            </div>
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="w-[80px]">Image</TableHead>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Family</TableHead>
+                  <TableHead>Features</TableHead>
+                  <TableHead>Range</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="t">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts && filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <TableRow key={product._id} className="group">
+                      <TableCell>
+                        <div className="relative h-12 w-12 rounded-md overflow-hidden border bg-muted">
+                          {product.productImage &&
+                          product.productImage.length > 0 ? (
+                            <Image
+                              src={product.productImage[0].url}
+                              alt={product.productName}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full w-full text-muted-foreground">
+                              <Package className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{product.productName}</span>
+                          {product.unitSizeCustomizationNote && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                              {product.unitSizeCustomizationNote}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{product.family}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-normal">
+                          {product.features.length} variant
+                          {product.features.length !== 1 ? "s" : ""}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {product.minRange}-{product.maxRange}{" "}
+                          <span className="text-muted-foreground">
+                            {product.measureUnit}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            product.availabilityNote === "In stock"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            product.availabilityNote === "In stock"
+                              ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200"
+                              : "bg-yellow-500/15 text-yellow-700 hover:bg-yellow-500/25 border-yellow-200"
+                          }
+                        >
+                          {product.availabilityNote || "Unknown"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 group-hover:opacity-100 bg-red-600/15 cursor-pointer hover:bg-red-600/50 hover:text-white transition-opacity"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => handleViewProduct(product)}
+                              className="cursor-pointer hover:bg-red-600/50 hover:text-white"
+                            >
+                              <Eye className="mr-2 h-4 w-4 " />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <Link href={`/products/edit/${product._id}`}>
+                              <DropdownMenuItem className="cursor-pointer hover:bg-red-600/50 hover:text-white">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Product
+                              </DropdownMenuItem>
+                            </Link>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="h-24 text-center text-muted-foreground"
                     >
-                      {product.availabilityNote || "Unknown"}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      className="text-blue-600 hover:underline cursor-pointer"
-                      onClick={() => handleViewProduct(product)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="py-8 px-4 text-center text-gray-500">
-                  No products found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                      No products found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle>Product Details</DialogTitle>
             <DialogDescription>
-              Detailed information about the selected product.
+              Detailed information about {selectedProduct?.productName}
             </DialogDescription>
           </DialogHeader>
           {selectedProduct && (
-            <div className="grid gap-6 py-4">
-              {/* Product Images */}
-              {selectedProduct.productImage &&
-                selectedProduct.productImage.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto">
+            <div className="flex flex-col">
+              {/* Product Images Carousel/Grid */}
+              <div className="px-6 pb-6">
+                {selectedProduct.productImage &&
+                selectedProduct.productImage.length > 0 ? (
+                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                     {selectedProduct.productImage.map((img) => (
-                      <Image
+                      <div
                         key={img._id}
-                        src={img.url}
-                        alt={selectedProduct.productName}
-                        width={200}
-                        height={200}
-                        className="rounded-lg object-cover"
-                      />
+                        className="relative h-48 w-48 flex-shrink-0 rounded-lg overflow-hidden border bg-muted"
+                      >
+                        <Image
+                          src={img.url}
+                          alt={selectedProduct.productName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     ))}
                   </div>
-                )}
-
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Product Name
-                  </p>
-                  <p className="font-semibold">{selectedProduct.productName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Family</p>
-                  <p className="font-semibold">{selectedProduct.family}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Product ID
-                  </p>
-                  <p className="text-sm">{selectedProduct._id}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Availability
-                  </p>
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      selectedProduct.availabilityNote === "In stock"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {selectedProduct.availabilityNote || "Unknown"}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Range</p>
-                  <p>
-                    {selectedProduct.minRange}-{selectedProduct.maxRange}{" "}
-                    {selectedProduct.measureUnit}
-                  </p>
-                </div>
-                {selectedProduct.createdAt && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Created</p>
-                    <p className="text-sm">
-                      {new Date(selectedProduct.createdAt).toLocaleDateString()}
-                    </p>
+                ) : (
+                  <div className="h-48 w-full rounded-lg border bg-muted flex items-center justify-center text-muted-foreground">
+                    <Package className="h-12 w-12 opacity-50" />
                   </div>
                 )}
               </div>
 
-              {/* Customization Note */}
-              {selectedProduct.unitSizeCustomizationNote && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Customization
-                  </p>
-                  <p className="text-sm">
-                    {selectedProduct.unitSizeCustomizationNote}
-                  </p>
-                </div>
-              )}
-
-              {/* Features */}
-              {selectedProduct.features &&
-                selectedProduct.features.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 mb-2">
-                      Features & Variants
+              <div className="p-6 pt-0 space-y-6">
+                {/* Key Details */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Family
                     </p>
-                    <div className="space-y-2">
-                      {selectedProduct.features.map((feature, index) => (
-                        <div
-                          key={feature._id || index}
-                          className="border rounded-lg p-3 bg-gray-50"
-                        >
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                            {feature.reference && (
-                              <div>
-                                <span className="font-medium">Reference:</span>{" "}
-                                {feature.reference}
-                              </div>
-                            )}
-                            {feature.size1 && feature.size2 && (
-                              <div>
-                                <span className="font-medium">Size:</span>{" "}
-                                {feature.size1} x {feature.size2}
-                              </div>
-                            )}
-                            {feature.thickness && (
-                              <div>
-                                <span className="font-medium">Thickness:</span>{" "}
-                                {feature.thickness}mm
-                              </div>
-                            )}
-                            {feature.finishQuality && (
-                              <div>
-                                <span className="font-medium">Finish:</span>{" "}
-                                {feature.finishQuality}
-                              </div>
-                            )}
-                            {feature.kgsPerUnit && (
-                              <div>
-                                <span className="font-medium">Weight:</span>{" "}
-                                {feature.kgsPerUnit} kg/unit
-                              </div>
-                            )}
-                            {feature.miterPerUnitPrice && (
-                              <div>
-                                <span className="font-medium">Price:</span> $
-                                {feature.miterPerUnitPrice}/unit
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <p className="font-semibold">{selectedProduct.family}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Range
+                    </p>
+                    <p className="font-semibold">
+                      {selectedProduct.minRange}-{selectedProduct.maxRange}{" "}
+                      {selectedProduct.measureUnit}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Weight
+                    </p>
+                    <p className="font-semibold">
+                      {selectedProduct.kgsPerUnit} kg/unit
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Status
+                    </p>
+                    <Badge
+                      variant={
+                        selectedProduct.availabilityNote === "In stock"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {selectedProduct.availabilityNote || "Unknown"}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Customization Note */}
+                {selectedProduct.unitSizeCustomizationNote && (
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-sm font-medium mb-1">
+                      Customization Note
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedProduct.unitSizeCustomizationNote}
+                    </p>
                   </div>
                 )}
+
+                {/* Features List */}
+                {selectedProduct.features &&
+                  selectedProduct.features.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold">
+                        Features & Variants
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedProduct.features.map((feature, index) => (
+                          <Card
+                            key={feature._id || index}
+                            className="shadow-none border bg-card"
+                          >
+                            <CardContent className="p-3 text-sm space-y-2">
+                              <div className="flex justify-between items-center border-b pb-2">
+                                <span className="font-medium">
+                                  {feature.reference}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {feature.finishQuality}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+                                <div>
+                                  Size: {feature.size1} x {feature.size2}
+                                </div>
+                                <div>Thickness: {feature.thickness}mm</div>
+                                {feature.miterPerUnitPrice && (
+                                  <div className="col-span-2 text-foreground font-medium">
+                                    ${feature.miterPerUnitPrice}/unit
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </div>
             </div>
           )}
         </DialogContent>
