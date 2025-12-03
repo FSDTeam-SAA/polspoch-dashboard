@@ -59,19 +59,19 @@ export function useImageUpload(
   }, []);
 
   const removeExistingImage = useCallback(async (publicKey: string) => {
-    try {
-      setIsUploading(true);
-      await productService.deleteImage(publicKey);
-      setExistingImages((prev) =>
-        prev.filter((img) => img.publickey !== publicKey)
-      );
-      toast.success("Image deleted successfully");
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
-    } finally {
-      setIsUploading(false);
-    }
+    // try {
+    //   setIsUploading(true);
+    //   await productService.deleteImage(publicKey);
+    //   setExistingImages((prev) =>
+    //     prev.filter((img) => img.publickey !== publicKey)
+    //   );
+    //   toast.success("Image deleted successfully");
+    // } catch (error) {
+    //   console.error("Error deleting image:", error);
+    //   toast.error("Failed to delete image");
+    // } finally {
+    //   setIsUploading(false);
+    // }
   }, []);
 
   const clearAll = useCallback(() => {
