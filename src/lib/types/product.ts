@@ -12,7 +12,7 @@ export interface Feature {
   size2: number;
   thickness: number;
   finishQuality: string;
-  kgsPerUnit?: number;
+
   miterPerUnitPrice?: number;
   unitSizes?: number[];
   _id?: string;
@@ -32,7 +32,28 @@ export interface Product {
   minRange: number;
   maxRange: number;
   measureUnit: string;
+  kgsPerUnit: number;
 
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Form data type (for creating/updating products)
+export interface ProductFormData {
+  family: string;
+  productName: string;
+  availabilityNote?: string;
+  unitSizeCustomizationNote?: string;
+  features: Omit<Feature, "_id">[];
+  minRange: number;
+  maxRange: number;
+  measureUnit: string;
+  kgsPerUnit: number;
+}
+
+// Image file type for uploads
+export interface ImageFile {
+  file: File;
+  preview: string;
+  id: string;
 }
