@@ -9,202 +9,371 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-interface Product {
-  id: string;
-  customers: {
-    Name: string;
-    image: string;
-    email: string;
-  };
-  productName: string;
-  Date: string;
-  Amount: number;
-}
-
-const products = [
-  {
-    id: "INV001",
-    customers: {
-      Name: "John Doe",
-      image: "https://randomuser.me/api/portraits/men/1.jpg",
-      email: "john.doe@example.com",
-    },
-    productName: "Laptop Pro",
-    Date: "2023-10-26",
-    Amount: 1200.0,
-  },
-  {
-    id: "INV002",
-    customers: {
-      Name: "Jane Smith",
-      image: "https://randomuser.me/api/portraits/women/2.jpg",
-      email: "jane.smith@example.com",
-    },
-    productName: "Wireless Mouse",
-    Date: "2023-10-25",
-    Amount: 25.5,
-  },
-  {
-    id: "INV003",
-    customers: {
-      Name: "Robert Johnson",
-      image: "https://randomuser.me/api/portraits/men/3.jpg",
-      email: "robert.j@example.com",
-    },
-    productName: "Mechanical Keyboard",
-    Date: "2023-10-24",
-    Amount: 150.0,
-  },
-  {
-    id: "INV004",
-    customers: {
-      Name: "Emily White",
-      image: "https://randomuser.me/api/portraits/women/4.jpg",
-      email: "emily.w@example.com",
-    },
-    productName: "USB-C Hub",
-    Date: "2023-10-23",
-    Amount: 45.99,
-  },
-  {
-    id: "INV005",
-    customers: {
-      Name: "Michael Brown",
-      image: "https://randomuser.me/api/portraits/men/5.jpg",
-      email: "michael.b@example.com",
-    },
-    productName: "External SSD 1TB",
-    Date: "2023-10-22",
-    Amount: 99.99,
-  },
-];
+import Link from "next/link";
+import { useProducts } from "@/lib/hooks/useProduct";
+import { Product } from "@/lib/types/product";
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Package,
+  Eye,
+  Edit,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data: products, isLoading, error } = useProducts();
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Product List</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="py-3 px-4 text-left">ID</th>
-              <th className="py-3 px-4 text-left">Name</th>
-              <th className="py-3 px-4 text-left">Category</th>
-              <th className="py-3 px-4 text-left">Price</th>
-              <th className="py-3 px-4 text-left">Amount</th>
-              <th className="py-3 px-4 text-left">Status</th>
-              <th className="py-3 px-4 text-left">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700">
-            {products.map((product) => (
-              <tr
-                key={product.id}
-                className="border-b border-gray-200 hover:bg-gray-100"
-              >
-                <td className="py-3 px-4">#{product.id}</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center">
-                    <Image
-                      width={100}
-                      height={100}
-                      src={product.customers.image}
-                      alt={product.customers.Name}
-                      className="w-8 h-8 rounded-full mr-2"
-                    />
-                    <div>
-                      <div className="font-medium">
-                        {product.customers.Name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {product.customers.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3 px-4">{product.productName}</td>
-                <td className="py-3 px-4">{product.Date}</td>
-                <td className="py-3 px-4">${product.Amount.toFixed(2)}</td>
-                <td className="py-3 px-4">
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Delivered
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <button
-                    className="text-blue-600 hover:underline cursor-pointer"
-                    onClick={() => handleViewProduct(product)}
-                  >
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+  const filteredProducts = products?.filter((product) =>
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[60vh] text-destructive gap-2">
+        <AlertCircle className="h-8 w-8" />
+        <p className="text-lg font-medium">Error loading products</p>
+        <p className="text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your product catalog and inventory.
+          </p>
+        </div>
+        <Link href="/products/add-product">
+          <Button className="shadow-sm cursor-pointer">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </Link>
+      </div>
+
+      <Card className="shadow-sm border-border/50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Products</CardTitle>
+              <CardDescription>
+                A list of all products in your store including their name,
+                family, and status.
+              </CardDescription>
+            </div>
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="w-[80px]">Image</TableHead>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Family</TableHead>
+                  <TableHead>Features</TableHead>
+                  <TableHead>Range</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="t">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts && filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <TableRow key={product._id} className="group">
+                      <TableCell>
+                        <div className="relative h-12 w-12 rounded-md overflow-hidden border bg-muted">
+                          {product.productImage &&
+                          product.productImage.length > 0 ? (
+                            <Image
+                              src={product.productImage[0].url}
+                              alt={product.productName}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full w-full text-muted-foreground">
+                              <Package className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{product.productName}</span>
+                          {product.unitSizeCustomizationNote && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                              {product.unitSizeCustomizationNote}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{product.family}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="font-normal">
+                          {product.features.length} variant
+                          {product.features.length !== 1 ? "s" : ""}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {product.minRange}-{product.maxRange}{" "}
+                          <span className="text-muted-foreground">
+                            {product.measureUnit}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            product.availabilityNote === "In stock"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            product.availabilityNote === "In stock"
+                              ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200"
+                              : "bg-yellow-500/15 text-yellow-700 hover:bg-yellow-500/25 border-yellow-200"
+                          }
+                        >
+                          {product.availabilityNote || "Unknown"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 group-hover:opacity-100 bg-red-600/15 cursor-pointer hover:bg-red-600/50 hover:text-white transition-opacity"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => handleViewProduct(product)}
+                              className="cursor-pointer hover:bg-red-600/50 hover:text-white"
+                            >
+                              <Eye className="mr-2 h-4 w-4 " />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <Link href={`/products/edit/${product._id}`}>
+                              <DropdownMenuItem className="cursor-pointer hover:bg-red-600/50 hover:text-white">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Product
+                              </DropdownMenuItem>
+                            </Link>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      No products found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle>Product Details</DialogTitle>
             <DialogDescription>
-              Detailed information about the selected product.
+              Detailed information about {selectedProduct?.productName}
             </DialogDescription>
           </DialogHeader>
           {selectedProduct && (
-            <div className="grid gap-4 py-4">
-              <div className="flex items-center gap-4">
-                <Image
-                  src={selectedProduct.customers.image}
-                  alt={selectedProduct.customers.Name}
-                  width={64}
-                  height={64}
-                  className="rounded-full"
-                />
-                <div>
-                  <h3 className="font-semibold text-lg">
-                    {selectedProduct.customers.Name}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {selectedProduct.customers.email}
-                  </p>
-                </div>
+            <div className="flex flex-col">
+              {/* Product Images Carousel/Grid */}
+              <div className="px-6 pb-6">
+                {selectedProduct.productImage &&
+                selectedProduct.productImage.length > 0 ? (
+                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    {selectedProduct.productImage.map((img) => (
+                      <div
+                        key={img._id}
+                        className="relative h-48 w-48 flex-shrink-0 rounded-lg overflow-hidden border bg-muted"
+                      >
+                        <Image
+                          src={img.url}
+                          alt={selectedProduct.productName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-48 w-full rounded-lg border bg-muted flex items-center justify-center text-muted-foreground">
+                    <Package className="h-12 w-12 opacity-50" />
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Product Name
-                  </p>
-                  <p>{selectedProduct.productName}</p>
+
+              <div className="p-6 pt-0 space-y-6">
+                {/* Key Details */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Family
+                    </p>
+                    <p className="font-semibold">{selectedProduct.family}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Range
+                    </p>
+                    <p className="font-semibold">
+                      {selectedProduct.minRange}-{selectedProduct.maxRange}{" "}
+                      {selectedProduct.measureUnit}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Weight
+                    </p>
+                    <p className="font-semibold">
+                      {selectedProduct.kgsPerUnit} kg/unit
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Status
+                    </p>
+                    <Badge
+                      variant={
+                        selectedProduct.availabilityNote === "In stock"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {selectedProduct.availabilityNote || "Unknown"}
+                    </Badge>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Product ID
-                  </p>
-                  <p># {selectedProduct.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Date</p>
-                  <p>{selectedProduct.Date}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Amount</p>
-                  <p>${selectedProduct.Amount.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Status</p>
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Delivered
-                  </span>
-                </div>
+
+                {/* Customization Note */}
+                {selectedProduct.unitSizeCustomizationNote && (
+                  <div className="rounded-lg bg-muted/50 p-4">
+                    <p className="text-sm font-medium mb-1">
+                      Customization Note
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedProduct.unitSizeCustomizationNote}
+                    </p>
+                  </div>
+                )}
+
+                {/* Features List */}
+                {selectedProduct.features &&
+                  selectedProduct.features.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold">
+                        Features & Variants
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedProduct.features.map((feature, index) => (
+                          <Card
+                            key={feature._id || index}
+                            className="shadow-none border bg-card"
+                          >
+                            <CardContent className="p-3 text-sm space-y-2">
+                              <div className="flex justify-between items-center border-b pb-2">
+                                <span className="font-medium">
+                                  {feature.reference}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {feature.finishQuality}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+                                <div>
+                                  Size: {feature.size1} x {feature.size2}
+                                </div>
+                                <div>Thickness: {feature.thickness}mm</div>
+                                {feature.miterPerUnitPrice && (
+                                  <div className="col-span-2 text-foreground font-medium">
+                                    ${feature.miterPerUnitPrice}/unit
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           )}
