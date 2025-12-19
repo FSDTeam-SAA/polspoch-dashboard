@@ -36,10 +36,7 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
       family: "",
       availabilityNote: "",
       unitSizeCustomizationNote: "",
-      minRange: 0,
-      maxRange: 0,
       measureUnit: "",
-      kgsPerUnit: 0,
       features: [
         {
           reference: "",
@@ -47,6 +44,9 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
           size2: 0,
           thickness: 0,
           finishQuality: "",
+          minRange: 0,
+          maxRange: 0,
+          kgsPerUnit: 0,
           miterPerUnitPrice: undefined,
         },
       ],
@@ -104,10 +104,7 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
     // Append product data
     formData.append("productName", data.productName);
     formData.append("family", data.family);
-    formData.append("minRange", data.minRange.toString());
-    formData.append("maxRange", data.maxRange.toString());
     formData.append("measureUnit", data.measureUnit);
-    formData.append("kgsPerUnit", data.kgsPerUnit.toString());
 
     if (data.availabilityNote) {
       formData.append("availabilityNote", data.availabilityNote);
