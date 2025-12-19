@@ -4,9 +4,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Dashboard Template",
-  description:
-    "A modern dashboard template built with Next.js and Tailwind CSS.",
+  title: "Polspoch Dashboard",
+  description: "Polspoch Dashboard",
 };
 
 export default function RootLayout({
