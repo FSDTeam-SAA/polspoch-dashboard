@@ -13,6 +13,10 @@ export interface Feature {
   thickness: number;
   finishQuality: string;
 
+  minRange: number;
+  maxRange: number;
+  kgsPerUnit: number;
+
   miterPerUnitPrice?: number;
   unitSizes?: number[];
   _id?: string;
@@ -29,10 +33,7 @@ export interface Product {
 
   productImage: ProductImage[];
 
-  minRange: number;
-  maxRange: number;
   measureUnit: string;
-  kgsPerUnit: number;
 
   createdAt?: string;
   updatedAt?: string;
@@ -45,10 +46,7 @@ export interface ProductFormData {
   availabilityNote?: string;
   unitSizeCustomizationNote?: string;
   features: Omit<Feature, "_id">[];
-  minRange: number;
-  maxRange: number;
   measureUnit: string;
-  kgsPerUnit: number;
 }
 
 // Image file type for uploads

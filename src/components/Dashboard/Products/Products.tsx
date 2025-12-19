@@ -175,7 +175,19 @@ export default function Products() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {product.minRange}-{product.maxRange}{" "}
+                          {product.features.length > 0 ? (
+                            <>
+                              {Math.min(
+                                ...product.features.map((f) => f.minRange)
+                              )}
+                              -
+                              {Math.max(
+                                ...product.features.map((f) => f.maxRange)
+                              )}
+                            </>
+                          ) : (
+                            "N/A"
+                          )}{" "}
                           <span className="text-muted-foreground">
                             {product.measureUnit}
                           </span>
@@ -263,7 +275,7 @@ export default function Products() {
                     {selectedProduct.productImage.map((img) => (
                       <div
                         key={img._id}
-                        className="relative h-48 w-48 flex-shrink-0 rounded-lg overflow-hidden border bg-muted"
+                        className="relative h-48 w-48 shrink-0 rounded-lg overflow-hidden border bg-muted"
                       >
                         <Image
                           src={img.url}
@@ -295,7 +307,20 @@ export default function Products() {
                       Range
                     </p>
                     <p className="font-semibold">
-                      {selectedProduct.minRange}-{selectedProduct.maxRange}{" "}
+                      {selectedProduct.features &&
+                      selectedProduct.features.length > 0 ? (
+                        <>
+                          {Math.min(
+                            ...selectedProduct.features.map((f) => f.minRange)
+                          )}
+                          -
+                          {Math.max(
+                            ...selectedProduct.features.map((f) => f.maxRange)
+                          )}
+                        </>
+                      ) : (
+                        "N/A"
+                      )}{" "}
                       {selectedProduct.measureUnit}
                     </p>
                   </div>
@@ -304,7 +329,10 @@ export default function Products() {
                       Weight
                     </p>
                     <p className="font-semibold">
-                      {selectedProduct.kgsPerUnit} kg/unit
+                      {selectedProduct.features &&
+                      selectedProduct.features.length > 0
+                        ? `${selectedProduct.features[0].kgsPerUnit} kg/unit` // Showing first variant's weight or maybe range if needed
+                        : "N/A"}
                     </p>
                   </div>
                   <div className="space-y-1">
