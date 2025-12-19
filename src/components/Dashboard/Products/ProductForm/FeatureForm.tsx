@@ -1,7 +1,12 @@
 "use client";
 
 import React from "react";
-import { useFieldArray, Control } from "react-hook-form";
+import {
+  useFieldArray,
+  Control,
+  useWatch,
+  UseFormSetValue,
+} from "react-hook-form";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +19,14 @@ import { Separator } from "@/components/ui/separator";
 interface FeatureFormProps {
   control: Control<ProductFormValues>;
   errors: FieldErrors<ProductFormValues>;
+  setValue: UseFormSetValue<ProductFormValues>;
 }
 
-export default function FeatureForm({ control, errors }: FeatureFormProps) {
+export default function FeatureForm({
+  control,
+  errors,
+  setValue,
+}: FeatureFormProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "features",
@@ -29,6 +39,10 @@ export default function FeatureForm({ control, errors }: FeatureFormProps) {
       size2: 0,
       thickness: 0,
       finishQuality: "",
+      minRange: 0,
+      maxRange: 0,
+      kgsPerUnit: 0,
+      unitSizes: [],
       miterPerUnitPrice: undefined,
     });
   };
@@ -42,7 +56,11 @@ export default function FeatureForm({ control, errors }: FeatureFormProps) {
             Add different variants or features for this product.
           </p>
         </div>
-        <Button onClick={addFeature} size="sm" className="shadow-sm">
+        <Button
+          onClick={addFeature}
+          size="sm"
+          className="shadow-sm cursor-pointer"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Variant
         </Button>
@@ -197,6 +215,101 @@ export default function FeatureForm({ control, errors }: FeatureFormProps) {
                     )}
                   </div>
                 </div>
+
+                {/* Range & Weight Group */}
+                <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="space-y-2">
+                    <Label htmlFor={`features.${index}.minRange`}>
+                      Min Range <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`features.${index}.minRange`}
+                      type="number"
+                      step="0.01"
+                      {...control.register(`features.${index}.minRange`)}
+                      placeholder="0"
+                      className="bg-background"
+                    />
+                    {errors?.features?.[index]?.minRange && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.features[index].minRange.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`features.${index}.maxRange`}>
+                      Max Range <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`features.${index}.maxRange`}
+                      type="number"
+                      step="0.01"
+                      {...control.register(`features.${index}.maxRange`)}
+                      placeholder="0"
+                      className="bg-background"
+                    />
+                    {errors?.features?.[index]?.maxRange && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.features[index].maxRange.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`features.${index}.kgsPerUnit`}>
+                      Weight (kg/unit){" "}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`features.${index}.kgsPerUnit`}
+                      type="number"
+                      step="0.01"
+                      {...control.register(`features.${index}.kgsPerUnit`)}
+                      placeholder="0.00"
+                      className="bg-background"
+                    />
+                    {errors?.features?.[index]?.kgsPerUnit && (
+                      <p className="text-xs text-destructive font-medium">
+                        {errors.features[index].kgsPerUnit.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Unit Sizes (Dynamic) */}
+                <div className="col-span-full space-y-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+                  <div className="flex items-center justify-between">
+                    <Label>Unit Sizes</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const currentSizes =
+                          control._formValues.features[index].unitSizes || [];
+                        setValue(`features.${index}.unitSizes`, [
+                          ...currentSizes,
+                          0,
+                        ]);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Size
+                    </Button>
+                  </div>
+
+                  {/* Note: This is a simplified rendering since useFieldArray doesn't support nested arrays of primitives easily without wrapping object.
+                      Using a custom render map here based on the watching value or just using the register with numeric indices if we knew the length.
+                      However, without a nested useFieldArray, we need to inspect the current value to render inputs.
+                  */}
+                  <UnitSizeList
+                    nestIndex={index}
+                    control={control}
+                    setValue={setValue}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -206,6 +319,81 @@ export default function FeatureForm({ control, errors }: FeatureFormProps) {
       {errors?.features?.root && (
         <p className="text-sm text-destructive font-medium bg-destructive/10 p-3 rounded-md">
           {errors.features.root.message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UnitSizeList({
+  nestIndex,
+  control,
+  setValue,
+}: {
+  nestIndex: number;
+  control: Control<ProductFormValues>;
+  setValue: UseFormSetValue<ProductFormValues>;
+}) {
+  // We use a custom field component for simplified array management of primitives
+  return (
+    <UnitSizesField
+      nestIndex={nestIndex}
+      control={control}
+      setValue={setValue}
+    />
+  );
+}
+
+function UnitSizesField({
+  nestIndex,
+  control,
+  setValue,
+}: {
+  nestIndex: number;
+  control: Control<ProductFormValues>;
+  setValue: UseFormSetValue<ProductFormValues>;
+}) {
+  const unitSizes = useWatch({
+    control,
+    name: `features.${nestIndex}.unitSizes`,
+    defaultValue: [],
+  });
+
+  return (
+    <div className="space-y-2">
+      {unitSizes &&
+        unitSizes.map((_, k) => (
+          <div key={k} className="flex items-center gap-2">
+            <Input
+              type="number"
+              step="0.01"
+              {...control.register(
+                `features.${nestIndex}.unitSizes.${k}` as const,
+                {
+                  valueAsNumber: true,
+                }
+              )}
+              placeholder="Size"
+              className="bg-background"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const current = [...unitSizes];
+                current.splice(k, 1);
+                setValue(`features.${nestIndex}.unitSizes`, current);
+              }}
+              className="h-9 w-9 text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      {(!unitSizes || unitSizes.length === 0) && (
+        <p className="text-xs text-muted-foreground italic">
+          No unit sizes added.
         </p>
       )}
     </div>
