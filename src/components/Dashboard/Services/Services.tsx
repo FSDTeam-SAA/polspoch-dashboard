@@ -11,16 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Layers,
-  Ruler,
-  CheckCircle2,
-  ArrowRight,
-  Maximize2,
-  Pencil,
-} from "lucide-react";
+import { Ruler, CheckCircle2, ArrowRight, Pencil, Layers } from "lucide-react";
 import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
+import Link from "next/link";
 
 // --- Demo Data ---
 interface ShapeDimension {
@@ -34,22 +28,22 @@ interface ShapeSpec {
 }
 
 interface ServiceItem {
-  id: string;
+  shepName: string;
+  type: "rebar" | "cutting" | "bending";
   title: string;
   description: string;
   specs: ShapeSpec;
   dimensions: ShapeDimension[];
-  colorTheme: "blue" | "green" | "orange" | "purple";
   image?: string;
 }
 
 const initialRebarData: ServiceItem[] = [
   {
-    id: "shape-l",
+    shepName: "shape-l",
+    type: "rebar",
     title: "Shape L",
     description:
       "Standard L-shaped rebar specification for structural corners.",
-    colorTheme: "blue",
     image: "/images/shape-l.png",
     specs: {
       material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
@@ -63,10 +57,10 @@ const initialRebarData: ServiceItem[] = [
     ],
   },
   {
-    id: "shape-z",
+    shepName: "shape-z",
+    type: "rebar",
     title: "Shape Z",
     description: "Z-shaped rebar configuration for complex reinforcements.",
-    colorTheme: "purple",
     image: "/images/shape-z.png",
     specs: {
       material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
@@ -80,11 +74,142 @@ const initialRebarData: ServiceItem[] = [
       { label: "Degree 2", value: "90" },
     ],
   },
+  {
+    shepName: "shape-u",
+    type: "rebar",
+    title: "Shape U",
+    description: "U-shaped rebar configuration for complex reinforcements.",
+    image: "/images/shape-u.png",
+    specs: {
+      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
+      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
+    },
+    dimensions: [
+      { label: "Size U", value: "100 – 1980" },
+      { label: "Size A", value: "30 – 180" },
+      { label: "Size B", value: "50 – 250" },
+      { label: "Size C", value: "50 – 180" },
+      { label: "Degree 1 (A-B)", value: "90" },
+      { label: "Degree 2 (B-C)", value: "90" },
+    ],
+  },
+  {
+    shepName: "shape-omega",
+    type: "rebar",
+    title: "Shape Omega",
+    description: "Omega-shaped rebar configuration for complex reinforcements.",
+    image: "/images/shape-omega.png",
+    specs: {
+      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
+      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
+    },
+    dimensions: [
+      { label: "Size Omega", value: "100 – 1980" },
+      { label: "Size A", value: "30 – 180" },
+      { label: "Size B", value: "50 – 250" },
+      { label: "Size C", value: "50 – 180" },
+      { label: "Degree 1 (A-B)", value: "90" },
+      { label: "Degree 2 (B-C)", value: "90" },
+    ],
+  },
+];
+
+// --- Cutting Data ---
+const initialCuttingData: ServiceItem[] = [
+  {
+    shepName: "cut-laser",
+    type: "cutting",
+    title: "Laser Cutting",
+    description: "High-precision laser cutting for detailed shapes.",
+    image: "/images/laser-cutting.png",
+    specs: {
+      material: ["Steel", "Stainless", "Aluminum", "Copper"],
+      thickness: [
+        "0.5",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "8",
+        "10",
+        "12",
+        "15",
+        "20",
+      ],
+    },
+    dimensions: [
+      { label: "Max Width", value: "1500" },
+      { label: "Max Length", value: "3000" },
+      { label: "Tolerance", value: "±0.1" },
+    ],
+  },
+  {
+    shepName: "cut-plasma",
+    type: "cutting",
+    title: "Plasma Cutting",
+    description: "Cost-effective cutting for thick metal plates.",
+    image: "/images/plasma-cutting.png",
+    specs: {
+      material: ["Steel", "Stainless", "Aluminum"],
+      thickness: ["5", "10", "15", "20", "25", "30", "40", "50"],
+    },
+    dimensions: [
+      { label: "Max Width", value: "2000" },
+      { label: "Max Length", value: "6000" },
+      { label: "Tolerance", value: "±1.0" },
+    ],
+  },
+];
+
+// --- Bending Data ---
+const initialBendingData: ServiceItem[] = [
+  {
+    shepName: "bend-sheet",
+    type: "bending",
+    title: "Sheet Bending",
+    description: "Precision bending for metal sheets and plates.",
+    image: "/images/sheet-bending.png",
+    specs: {
+      material: ["Steel", "Stainless", "Aluminum"],
+      thickness: ["0.5", "1", "2", "3", "4", "5", "6"],
+    },
+    dimensions: [
+      { label: "Max Length", value: "3000" },
+      { label: "Min Angle", value: "30°" },
+      { label: "Accuracy", value: "±0.5°" },
+    ],
+  },
+  {
+    shepName: "bend-tube",
+    type: "bending",
+    title: "Tube Bending",
+    description: "Custom bending for round and square tubes.",
+    image: "/images/tube-bending.png",
+    specs: {
+      material: ["Steel", "Stainless", "Aluminum"],
+      thickness: ["1", "1.5", "2", "3"],
+    },
+    dimensions: [
+      { label: "Max Diameter", value: "100" },
+      { label: "Min Radius", value: "150" },
+      { label: "Max Angle", value: "180°" },
+    ],
+  },
 ];
 
 export default function Services() {
+  const [activeTab, setActiveTab] = useState("rebar");
+
+  // State for each service type
   const [rebarServices, setRebarServices] =
     useState<ServiceItem[]>(initialRebarData);
+  const [cuttingServices, setCuttingServices] =
+    useState<ServiceItem[]>(initialCuttingData);
+  const [bendingServices, setBendingServices] =
+    useState<ServiceItem[]>(initialBendingData);
+
   const [editingService, setEditingService] = useState<ServiceItem | null>(
     null
   );
@@ -94,13 +219,20 @@ export default function Services() {
     setEditingService(service);
     setIsDialogOpen(true);
   };
-
   const handleSaveService = (updatedService: ServiceItem) => {
-    setRebarServices((prev) =>
-      prev.map((item) =>
-        item.id === updatedService.id ? updatedService : item
-      )
-    );
+    // Helper to update a specific list
+    const updateList = (list: ServiceItem[]) =>
+      list.map((item) =>
+        item.shepName === updatedService.shepName ? updatedService : item
+      );
+
+    if (activeTab === "rebar") {
+      setRebarServices((prev) => updateList(prev));
+    } else if (activeTab === "cutting") {
+      setCuttingServices((prev) => updateList(prev));
+    } else if (activeTab === "bending") {
+      setBendingServices((prev) => updateList(prev));
+    }
   };
 
   return (
@@ -112,7 +244,7 @@ export default function Services() {
         onSave={handleSaveService}
       />
       <div className="flex flex-col space-y-2 ">
-        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent w-fit">
+        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-[#7E1800] to-[#7E1800]/60 bg-clip-text text-transparent w-fit">
           Our Processing Services
         </h1>
         <p className="text-muted-foreground max-w-2xl">
@@ -121,28 +253,34 @@ export default function Services() {
         </p>
       </div>
 
-      <Tabs defaultValue="rebar" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-8">
           <TabsList className="grid w-full max-w-[400px] grid-cols-3 h-11 p-1">
             <TabsTrigger
               value="rebar"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-[#7E1800] data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Rebar
             </TabsTrigger>
             <TabsTrigger
               value="cutting"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-[#7E1800] data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Cutting
             </TabsTrigger>
             <TabsTrigger
               value="bending"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-[#7E1800] data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Bending
             </TabsTrigger>
           </TabsList>
+          <Link href={`/services/${activeTab}/calculation`}>
+            <button className="bg-[#7E1800] cursor-pointer text-primary-foreground px-4 py-2 rounded-md hover:bg-[#7E1800]/90 transition-colors font-medium">
+              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
+              Calculation
+            </button>
+          </Link>
         </div>
 
         {/* Rebar Tab Content */}
@@ -153,7 +291,7 @@ export default function Services() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {rebarServices.map((item) => (
               <ShapeCard
-                key={item.id}
+                key={item.shepName}
                 item={item}
                 onEdit={() => handleEditClick(item)}
               />
@@ -161,46 +299,36 @@ export default function Services() {
           </div>
         </TabsContent>
 
-        {/* Cutting Tab Content - Placeholder */}
+        {/* Cutting Tab Content */}
         <TabsContent
           value="cutting"
-          className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
+          className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 "
         >
-          <Card className="border-dashed">
-            <CardHeader>
-              <CardTitle>Cutting Services</CardTitle>
-              <CardDescription>
-                Precision cutting services for various materials.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px] flex flex-col items-center justify-center text-muted-foreground gap-4">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                <Layers className="h-8 w-8 opacity-50" />
-              </div>
-              <p>Cutting service specifications coming soon...</p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {cuttingServices.map((item) => (
+              <ShapeCard
+                key={item.shepName}
+                item={item}
+                onEdit={() => handleEditClick(item)}
+              />
+            ))}
+          </div>
         </TabsContent>
 
-        {/* Bending Tab Content - Placeholder */}
+        {/* Bending Tab Content */}
         <TabsContent
           value="bending"
           className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
         >
-          <Card className="border-dashed">
-            <CardHeader>
-              <CardTitle>Bending Services</CardTitle>
-              <CardDescription>
-                Custom bending solutions for your construction needs.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px] flex flex-col items-center justify-center text-muted-foreground gap-4">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                <Maximize2 className="h-8 w-8 opacity-50" />
-              </div>
-              <p>Bending service specifications coming soon...</p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {bendingServices.map((item) => (
+              <ShapeCard
+                key={item.shepName}
+                item={item}
+                onEdit={() => handleEditClick(item)}
+              />
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -215,51 +343,15 @@ function ShapeCard({
   item: ServiceItem;
   onEdit: () => void;
 }) {
-  // Dynamic styles based on theme
-  const themeStyles = {
-    blue: {
-      border: "border-blue-200 dark:border-blue-900",
-      bg: "bg-blue-50/50 dark:bg-blue-950/10",
-      badge:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200",
-      icon: "text-blue-600 dark:text-blue-400",
-    },
-    purple: {
-      border: "border-purple-200 dark:border-purple-900",
-      bg: "bg-purple-50/50 dark:bg-purple-950/10",
-      badge:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 hover:bg-purple-200",
-      icon: "text-purple-600 dark:text-purple-400",
-    },
-    green: {
-      border: "border-green-200 dark:border-green-900",
-      bg: "bg-green-50/50 dark:bg-green-950/10",
-      badge:
-        "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 hover:bg-green-200",
-      icon: "text-green-600 dark:text-green-400",
-    },
-    orange: {
-      border: "border-orange-200 dark:border-orange-900",
-      bg: "bg-orange-50/50 dark:bg-orange-950/10",
-      badge:
-        "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 hover:bg-orange-200",
-      icon: "text-orange-600 dark:text-orange-400",
-    },
-  }[item.colorTheme];
-
   return (
-    <Card
-      className={`overflow-hidden transition-all duration-300 hover:shadow-lg ${themeStyles.border} group`}
-    >
-      <CardHeader
-        className={`${themeStyles.bg} border-b ${themeStyles.border} pb-6`}
-      >
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg border-[#7E1800]/20 dark:border-[#7E1800]/40 group">
+      <CardHeader className="bg-[#7E1800]/5 border-b border-[#7E1800]/20 pb-6">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <CardTitle className="text-2xl flex items-center gap-2">
+            <CardTitle className="text-2xl flex items-center gap-2 text-[#7E1800]">
               {item.title}
             </CardTitle>
-            <CardDescription className="text-balance">
+            <CardDescription className="text-balance text-muted-foreground">
               {item.description}
             </CardDescription>
           </div>
@@ -285,7 +377,7 @@ function ShapeCard({
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <Layers className={`h-4 w-4 ${themeStyles.icon}`} />
+              <Layers className="h-4 w-4 text-[#7E1800]" />
               Materials
             </div>
             <div className="flex flex-wrap gap-2">
@@ -293,7 +385,7 @@ function ShapeCard({
                 <Badge
                   key={mat}
                   variant="secondary"
-                  className="font-normal bg-secondary/50 hover:bg-secondary"
+                  className="font-normal bg-[#7E1800]/10 text-[#7E1800] border-transparent hover:bg-[#7E1800]/20"
                 >
                   {mat}
                 </Badge>
@@ -303,14 +395,14 @@ function ShapeCard({
 
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <CheckCircle2 className={`h-4 w-4 ${themeStyles.icon}`} />
+              <CheckCircle2 className="h-4 w-4 text-[#7E1800]" />
               Thickness (mm)
             </div>
             <div className="flex flex-wrap gap-1.5">
               {item.specs.thickness.map((t) => (
                 <div
                   key={t}
-                  className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border border-border/50 ${themeStyles.bg}`}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border border-[#7E1800]/20 bg-[#7E1800]/5 text-[#7E1800]"
                 >
                   {t}
                 </div>
@@ -321,21 +413,21 @@ function ShapeCard({
 
         {/* Dimensions Section */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
-            <Ruler className={`h-4 w-4 ${themeStyles.icon}`} />
+          <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b border-[#7E1800]/10 pb-2">
+            <Ruler className="h-4 w-4 text-[#7E1800]" />
             Dimensions Specification
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {item.dimensions.map((dim, idx) => (
               <div
                 key={idx}
-                className="bg-muted/30 p-4 rounded-lg border border-border/40 hover:border-primary/20 transition-colors"
+                className="bg-[#7E1800]/5 p-4 rounded-lg border border-[#7E1800]/10 hover:border-[#7E1800]/30 transition-colors"
               >
                 <span className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
-                  <ArrowRight className="h-3 w-3 opacity-50" />
+                  <ArrowRight className="h-3 w-3 opacity-50 text-[#7E1800]" />
                   {dim.label}
                 </span>
-                <span className="font-bold text-base md:text-lg tabular-nums tracking-tight text-foreground/90">
+                <span className="font-bold text-base md:text-lg tabular-nums tracking-tight text-[#7E1800]/90">
                   {dim.value}
                 </span>
               </div>
@@ -348,7 +440,7 @@ function ShapeCard({
       <div className="px-6 pb-6 pt-0">
         <button
           onClick={onEdit}
-          className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors border ${themeStyles.border} hover:bg-muted/50 cursor-pointer`}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors border border-[#7E1800] text-[#7E1800] hover:bg-[#7E1800] hover:text-white cursor-pointer"
         >
           <Pencil className="h-4 w-4" />
           Edit Service Details
