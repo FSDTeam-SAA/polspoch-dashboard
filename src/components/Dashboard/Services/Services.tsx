@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
+import Link from "next/link";
 
 // --- Demo Data ---
 interface ShapeDimension {
@@ -83,6 +84,7 @@ const initialRebarData: ServiceItem[] = [
 ];
 
 export default function Services() {
+  const [activeTab, setActiveTab] = useState("rebar");
   const [rebarServices, setRebarServices] =
     useState<ServiceItem[]>(initialRebarData);
   const [editingService, setEditingService] = useState<ServiceItem | null>(
@@ -121,28 +123,33 @@ export default function Services() {
         </p>
       </div>
 
-      <Tabs defaultValue="rebar" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-8">
           <TabsList className="grid w-full max-w-[400px] grid-cols-3 h-11 p-1">
             <TabsTrigger
               value="rebar"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Rebar
             </TabsTrigger>
             <TabsTrigger
               value="cutting"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Cutting
             </TabsTrigger>
             <TabsTrigger
               value="bending"
-              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              className="data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all cursor-pointer"
             >
               Bending
             </TabsTrigger>
           </TabsList>
+          <Link href={`/services/${activeTab}/calculation`}>
+            <button className="bg-[#7E1800] cursor-pointer text-primary-foreground px-4 py-2 rounded-md hover:bg-[#7E1800]/90 transition-colors font-medium">
+              {activeTab} calculation
+            </button>
+          </Link>
         </div>
 
         {/* Rebar Tab Content */}
@@ -164,7 +171,7 @@ export default function Services() {
         {/* Cutting Tab Content - Placeholder */}
         <TabsContent
           value="cutting"
-          className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
+          className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 "
         >
           <Card className="border-dashed">
             <CardHeader>
