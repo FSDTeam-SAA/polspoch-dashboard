@@ -101,7 +101,7 @@ export default function BendingCalculation() {
 
   const [labour, setLabour] = useState({
     startingPrice: 20,
-    pricePerKg: 8,
+    pricePerBend: 8,
   });
 
   const [margin, setMargin] = useState({
@@ -232,14 +232,14 @@ export default function BendingCalculation() {
 
             <tr>
               <td className="border border-black p-2 flex justify-between items-center">
-                PRICE €/KG
+                PRICE €/BEND
                 <input
                   type="number"
-                  value={labour.pricePerKg}
+                  value={labour.pricePerBend}
                   onChange={(e) =>
                     setLabour({
                       ...labour,
-                      pricePerKg: +e.target.value,
+                      pricePerBend: +e.target.value,
                     })
                   }
                   className="w-20 bg-yellow-200 text-center outline-none"
