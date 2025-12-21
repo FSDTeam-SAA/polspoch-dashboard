@@ -9,6 +9,8 @@ import {
   LogOut,
   ShoppingBasket,
   Folder,
+  CircleDollarSign,
+  ShieldUser,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,8 +32,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Folder },
   { name: "Services", href: "/services", icon: Ship },
   { name: "Orders", href: "/orders", icon: ShoppingBasket },
-  { name: "Customers", href: "/customers", icon: NotebookText },
-  { name: "Payments", href: "/payments", icon: NotebookText },
+  // { name: "Customers", href: "/customers", icon: ShieldUser },
+  { name: "Payments", href: "/payments", icon: CircleDollarSign },
 ];
 
 export default function Sidebar() {
@@ -75,7 +77,7 @@ export default function Sidebar() {
                 "flex items-center gap-3 rounded-lg p-3 text-base leading-[150%] tracking-[0%] font-semibold transition-colors",
                 isActive
                   ? "bg-primary text-white"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
               <item.icon className="h-5 w-5" />
