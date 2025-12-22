@@ -1,28 +1,48 @@
 "use client";
+import { useServicesCalculation } from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import { RebarMaterialData, ServiceDetail } from "@/types/servicesCalculation";
 import React, { useState } from "react";
 
-const initialData = [
-  { diameter: 6, price: 1.13, weight: 0.23 },
-  { diameter: 8, price: 0.957, weight: 0.41 },
-  { diameter: 10, price: 0.93, weight: 0.64 },
-  { diameter: 12, price: 0.89, weight: 0.92 },
-  { diameter: 16, price: 0.882, weight: 1.63 },
-  { diameter: 20, price: 0.882, weight: 2.55 },
-  { diameter: 25, price: 0.894, weight: 3.98 },
-];
-
 export default function Calculation() {
-  const [rows, setRows] = useState(initialData);
+  const { data: servicesCalculation, isLoading } = useServicesCalculation();
 
-  const [labour, setLabour] = useState({
-    startingPrice: 10,
-    pricePerKg: 0.2,
-  });
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
+    );
+  }
+
+  if (!servicesCalculation?.rebar) {
+    return (
+      <div className="p-6 text-center text-xl text-red-500">
+        No Rebar Data Found
+      </div>
+    );
+  }
+
+  return <RebarForm initialData={servicesCalculation.rebar} />;
+}
+
+function RebarForm({
+  initialData,
+}: {
+  initialData: ServiceDetail<RebarMaterialData>;
+}) {
+  const [rows, setRows] = useState<RebarMaterialData[]>(
+    initialData.materialData || []
+  );
+
+  const [labour, setLabour] = useState(
+    initialData.labour || {
+      startingPrice: 10,
+      pricePerKg: 0.2,
+    }
+  );
 
   const [margin, setMargin] = useState({
-    value: 1.6,
+    value: initialData.margin || 1.6,
   });
 
   const handleChange = (index: number, value: string) => {

@@ -1,118 +1,61 @@
 "use client";
+import { useServicesCalculation } from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import {
+  BendingMaterialData,
+  ServiceDetail,
+} from "@/types/servicesCalculation";
 import React, { useState } from "react";
 
-const initialTable = [
-  {
-    thickness: 0.6,
-    rawsteel: "",
-    galvanized: 1.41,
-    corten: "",
-    teardrod: "",
-    white: 1.96,
-    red: 1.96,
-    darkGreen: 1.96,
-  },
-  {
-    thickness: 0.8,
-    rawsteel: "",
-    galvanized: 1.35,
-    corten: "",
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 1,
-    rawsteel: "",
-    galvanized: 1.29,
-    corten: "",
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 1.5,
-    rawsteel: 1.08,
-    galvanized: 1.26,
-    corten: 1.7,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 2,
-    rawsteel: 1.0,
-    galvanized: 1.26,
-    corten: 1.64,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 3,
-    rawsteel: 0.99,
-    galvanized: 1.26,
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 4,
-    rawsteel: 0.99,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 5,
-    rawsteel: 0.99,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 6,
-    rawsteel: 1.008,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-];
-
 export default function BendingCalculation() {
-  const [rows, setRows] = useState(initialTable);
+  const { data: servicesCalculation, isLoading } = useServicesCalculation();
 
-  const [labour, setLabour] = useState({
-    startingPrice: 20,
-    pricePerBend: 8,
-  });
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
+    );
+  }
 
+  if (!servicesCalculation?.bending) {
+    return (
+      <div className="p-6 text-center text-xl text-red-500">
+        No Bending Data Found
+      </div>
+    );
+  }
+
+  return <BendingForm initialData={servicesCalculation.bending} />;
+}
+
+function BendingForm({
+  initialData,
+}: {
+  initialData: ServiceDetail<BendingMaterialData>;
+}) {
+  const [rows, setRows] = useState<BendingMaterialData[]>(
+    initialData.materialData || []
+  );
+  const [labour, setLabour] = useState(
+    initialData.labour || {
+      startingPrice: 20,
+      pricePerBend: 8,
+    }
+  );
   const [margin, setMargin] = useState({
-    value: 1.8,
+    value: initialData.margin || 1.8,
   });
 
-  const handleChange = (index: number, key: string, value: string) => {
-    const updated = [...rows];
-    // @ts-expect-error: key is typed as string but used to index specific object shape
-    updated[index][key] = Number(value);
-    setRows(updated);
+  const handleChange = (
+    index: number,
+    key: keyof BendingMaterialData,
+    value: string
+  ) => {
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, [key]: Number(value) } : row
+      )
+    );
   };
 
   const handleSubmit = () => {
@@ -174,7 +117,7 @@ export default function BendingCalculation() {
                   "rawsteel",
                   "galvanized",
                   "corten",
-                  "teardrod",
+                  "teardrop",
                   "white",
                   "red",
                   "darkGreen",
@@ -183,10 +126,10 @@ export default function BendingCalculation() {
                 <td
                   key={key}
                   className={`border border-black p-1 text-center ${
-                    row[key] !== "" ? "bg-yellow-200" : "bg-gray-200"
+                    row[key] !== 0 ? "bg-yellow-200" : "bg-gray-200"
                   }`}
                 >
-                  {row[key] !== "" && (
+                  {row[key] !== 0 && (
                     <input
                       type="number"
                       value={row[key]}
