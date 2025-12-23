@@ -114,7 +114,7 @@ export default function DashboardHeader() {
               </DropdownMenuItem>
             </Link>
 
-            <Link href="/profile/changePassword">
+            <Link href="/change-password">
               <DropdownMenuItem>
                 <KeyIcon /> Change Password
               </DropdownMenuItem>
