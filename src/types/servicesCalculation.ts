@@ -42,6 +42,22 @@ export interface ServicesCalculationData {
   updatedAt: string;
 }
 
+export type ServiceType = "rebar" | "bending" | "cutting";
+
+export interface ServiceUpdatePayload {
+  type: ServiceType;
+  labour: {
+    startingPrice: number;
+    [key: string]: number;
+  };
+  materialData: (
+    | RebarMaterialData
+    | BendingMaterialData
+    | CuttingMaterialData
+  )[];
+  margin: number;
+}
+
 export interface ServicesCalculationResponse {
   success: boolean;
   data: ServicesCalculationData;

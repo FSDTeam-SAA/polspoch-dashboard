@@ -1,15 +1,22 @@
 "use client";
-import { useServicesCalculation } from "@/lib/hooks/useServicesCalculation";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import {
   CuttingMaterialData,
   ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
 } from "@/types/servicesCalculation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function CuttingCalculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
     return (
@@ -25,13 +32,22 @@ export default function CuttingCalculation() {
     );
   }
 
-  return <CuttingForm initialData={servicesCalculation.cutting} />;
+  return (
+    <CuttingForm
+      initialData={servicesCalculation.cutting}
+      onSubmit={updateServices}
+    />
+  );
 }
 
 function CuttingForm({
   initialData,
+  onSubmit,
 }: {
   initialData: ServiceDetail<CuttingMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<CuttingMaterialData[]>(
     initialData.materialData || []
@@ -58,10 +74,21 @@ function CuttingForm({
     );
   };
 
-  const handleSubmit = () => {
-    console.log("Cutting Material Data:", rows);
-    console.log("Cutting Labour Data:", labour);
-    console.log("Cutting Margin Data:", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "cutting",
+      materialData: rows,
+      labour,
+      margin,
+    };
+
+    try {
+      await onSubmit(data);
+      toast.success("Cutting calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update cutting calculation:", error);
+      toast.error("Failed to update cutting calculation.");
+    }
   };
 
   return (

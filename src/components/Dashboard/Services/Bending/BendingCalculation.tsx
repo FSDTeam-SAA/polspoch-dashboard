@@ -1,15 +1,22 @@
 "use client";
-import { useServicesCalculation } from "@/lib/hooks/useServicesCalculation";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import {
   BendingMaterialData,
   ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
 } from "@/types/servicesCalculation";
-import React, { useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function BendingCalculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
     return (
@@ -25,13 +32,22 @@ export default function BendingCalculation() {
     );
   }
 
-  return <BendingForm initialData={servicesCalculation.bending} />;
+  return (
+    <BendingForm
+      initialData={servicesCalculation.bending}
+      onSubmit={updateServices}
+    />
+  );
 }
 
 function BendingForm({
   initialData,
+  onSubmit,
 }: {
   initialData: ServiceDetail<BendingMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<BendingMaterialData[]>(
     initialData.materialData || []
@@ -42,9 +58,7 @@ function BendingForm({
       pricePerBend: 8,
     }
   );
-  const [margin, setMargin] = useState({
-    value: initialData.margin || 1.8,
-  });
+  const [margin, setMargin] = useState(initialData.margin || 1.8);
 
   const handleChange = (
     index: number,
@@ -58,10 +72,21 @@ function BendingForm({
     );
   };
 
-  const handleSubmit = () => {
-    console.log("BENDING DATA:", rows);
-    console.log("LABOUR", labour);
-    console.log("MARGIN", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "bending",
+      materialData: rows,
+      labour,
+      margin,
+    };
+
+    try {
+      await onSubmit(data);
+      toast.success("Bending calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update bending calculation:", error);
+      toast.error("Failed to update bending calculation.");
+    }
   };
 
   return (
@@ -208,8 +233,8 @@ function BendingForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={margin.value}
-                  onChange={(e) => setMargin({ value: +e.target.value })}
+                  value={margin}
+                  onChange={(e) => setMargin(+e.target.value)}
                   className="w-20 bg-yellow-200 text-center outline-none"
                 />
               </td>

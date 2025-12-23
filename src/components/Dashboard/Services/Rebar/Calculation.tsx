@@ -1,12 +1,22 @@
 "use client";
-import { useServicesCalculation } from "@/lib/hooks/useServicesCalculation";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
-import { RebarMaterialData, ServiceDetail } from "@/types/servicesCalculation";
-import React, { useState } from "react";
+import {
+  RebarMaterialData,
+  ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
+} from "@/types/servicesCalculation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Calculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
     return (
@@ -22,13 +32,22 @@ export default function Calculation() {
     );
   }
 
-  return <RebarForm initialData={servicesCalculation.rebar} />;
+  return (
+    <RebarForm
+      initialData={servicesCalculation.rebar}
+      onSubmit={updateServices}
+    />
+  );
 }
 
 function RebarForm({
   initialData,
+  onSubmit,
 }: {
   initialData: ServiceDetail<RebarMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<RebarMaterialData[]>(
     initialData.materialData || []
@@ -41,20 +60,31 @@ function RebarForm({
     }
   );
 
-  const [margin, setMargin] = useState({
-    value: initialData.margin || 1.6,
-  });
+  const [margin, setMargin] = useState(initialData.margin || 1.6);
 
   const handleChange = (index: number, value: string) => {
-    const updated = [...rows];
-    updated[index].price = Number(value);
-    setRows(updated);
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, price: Number(value) } : row
+      )
+    );
   };
 
-  const handleSubmit = () => {
-    console.log("Rebar Data:", rows);
-    console.log("Labour Data:", labour);
-    console.log("Margin Data:", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "rebar",
+      materialData: rows,
+      labour,
+      margin,
+    };
+    // console.log(data);
+    try {
+      await onSubmit(data);
+      toast.success("Rebar calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update rebar calculation:", error);
+      toast.error("Failed to update rebar calculation.");
+    }
   };
 
   return (
@@ -160,8 +190,8 @@ function RebarForm({
                 Cost × Margin
                 <input
                   type="number"
-                  value={margin.value}
-                  onChange={(e) => setMargin({ value: +e.target.value })}
+                  value={margin}
+                  onChange={(e) => setMargin(+e.target.value)}
                   className="w-20 bg-yellow-200 text-center outline-none"
                 />
               </td>
