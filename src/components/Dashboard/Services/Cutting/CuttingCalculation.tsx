@@ -1,64 +1,94 @@
 "use client";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import {
+  CuttingMaterialData,
+  ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
+} from "@/types/servicesCalculation";
 import { useState } from "react";
-
-const initialTable = [
-  { thickness: 1.5, rawsteel: 1.08, galvanized: 1.29, corten: 1.7 },
-  { thickness: 2, rawsteel: 1.0, galvanized: 1.26, corten: 1.64 },
-  { thickness: 3, rawsteel: 0.99, galvanized: 1.26, corten: 1.55 },
-  { thickness: 4, rawsteel: 0.99, galvanized: 1.26, corten: 1.55 },
-  { thickness: 5, rawsteel: 0.96, galvanized: "", corten: 1.55 },
-  { thickness: 6, rawsteel: 0.96, galvanized: "", corten: 1.55 },
-  { thickness: 8, rawsteel: 0.96, galvanized: "", corten: "" },
-  { thickness: 10, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 12, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 14, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 15, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 16, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 18, rawsteel: 0.99, galvanized: "", corten: "" },
-  { thickness: 20, rawsteel: 1.02, galvanized: "", corten: "" },
-  { thickness: 22, rawsteel: 1.02, galvanized: "", corten: "" },
-  { thickness: 25, rawsteel: 1.02, galvanized: "", corten: "" },
-  { thickness: 30, rawsteel: 1.02, galvanized: "", corten: "" },
-  { thickness: 32, rawsteel: 1.08, galvanized: "", corten: "" },
-  { thickness: 35, rawsteel: 1.08, galvanized: "", corten: "" },
-  { thickness: 40, rawsteel: 1.08, galvanized: "", corten: "" },
-  { thickness: 45, rawsteel: 1.08, galvanized: "", corten: "" },
-  { thickness: 50, rawsteel: 1.12, galvanized: "", corten: "" },
-  { thickness: 55, rawsteel: 1.12, galvanized: "", corten: "" },
-  { thickness: 60, rawsteel: 1.12, galvanized: "", corten: "" },
-  { thickness: 70, rawsteel: 1.18, galvanized: "", corten: "" },
-  { thickness: 80, rawsteel: 1.18, galvanized: "", corten: "" },
-  { thickness: 90, rawsteel: 1.22, galvanized: "", corten: "" },
-  { thickness: 100, rawsteel: 1.28, galvanized: "", corten: "" },
-];
+import { toast } from "sonner";
 
 export default function CuttingCalculation() {
-  const [rows, setRows] = useState(initialTable);
+  const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
-  const [labour, setLabour] = useState({
-    startingPrice: 20,
-    priceInternal: 1.5,
-    numberCutting: 4,
-  });
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
+    );
+  }
 
-  const [margin, setMargin] = useState(1.6);
+  if (!servicesCalculation?.cutting) {
+    return (
+      <div className="p-6 text-center text-xl text-red-500">
+        No Cutting Data Found
+      </div>
+    );
+  }
+
+  return (
+    <CuttingForm
+      initialData={servicesCalculation.cutting}
+      onSubmit={updateServices}
+    />
+  );
+}
+
+function CuttingForm({
+  initialData,
+  onSubmit,
+}: {
+  initialData: ServiceDetail<CuttingMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
+}) {
+  const [rows, setRows] = useState<CuttingMaterialData[]>(
+    initialData.materialData || []
+  );
+
+  const [labour, setLabour] = useState(
+    initialData.labour || {
+      startingPrice: 20,
+      priceInternal: 1.5,
+    }
+  );
+
+  const [margin, setMargin] = useState(initialData.margin || 1.6);
 
   const handleChange = (
     index: number,
-    key: "rawsteel" | "galvanized" | "corten",
+    key: keyof CuttingMaterialData,
     value: string
   ) => {
-    const updated = [...rows];
-    updated[index][key] = Number(value);
-    setRows(updated);
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, [key]: Number(value) } : row
+      )
+    );
   };
 
-  const handleSubmit = () => {
-    console.log("Cutting Material Data:", rows);
-    console.log("Cutting Labour Data:", labour);
-    console.log("Cutting Margin Data:", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "cutting",
+      materialData: rows,
+      labour,
+      margin,
+    };
+
+    try {
+      await onSubmit(data);
+      toast.success("Cutting calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update cutting calculation:", error);
+      toast.error("Failed to update cutting calculation.");
+    }
   };
 
   return (
@@ -104,10 +134,10 @@ export default function CuttingCalculation() {
                 <td
                   key={key}
                   className={`border border-black p-1 text-center ${
-                    row[key] !== "" ? "bg-yellow-200" : "bg-gray-300"
+                    row[key] !== 0 ? "bg-yellow-200" : "bg-gray-300"
                   }`}
                 >
-                  {row[key] !== "" && (
+                  {row[key] !== 0 && (
                     <input
                       type="number"
                       value={row[key]}
@@ -156,20 +186,6 @@ export default function CuttingCalculation() {
                   value={labour.priceInternal}
                   onChange={(e) =>
                     setLabour({ ...labour, priceInternal: +e.target.value })
-                  }
-                  className="w-20 bg-yellow-200 text-center outline-none"
-                />
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black p-2 flex justify-between">
-                NUMBER CUTTING
-                <input
-                  type="number"
-                  value={labour.numberCutting}
-                  onChange={(e) =>
-                    setLabour({ ...labour, numberCutting: +e.target.value })
                   }
                   className="w-20 bg-yellow-200 text-center outline-none"
                 />

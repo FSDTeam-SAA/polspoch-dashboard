@@ -18,9 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { KeyIcon, LogOut, Menu, User2Icon } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
-import Link from "next/link";
 import { useState } from "react";
 import HeaderTitle from "../ReusableComponents/HeaderTitle";
 
@@ -36,13 +35,12 @@ export default function DashboardHeader() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const { data: session } = useSession();
 
-  //  DIRECT FAKE JSON DATA
   const user: UserProfile = {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
+    firstName: session?.user?.firstName,
+    lastName: session?.user?.lastName,
+    email: session?.user?.email,
     image: {
-      url: "https://i.pravatar.cc/150?img=21",
+      url: session?.user?.image,
     },
   };
 
@@ -83,10 +81,13 @@ export default function DashboardHeader() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 ">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 px-3">
+            <Button
+              variant="ghost"
+              className="flex items-center gap-3 px-3 cursor-pointer"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarImage
                   src={user.image?.url || "/images/profile-mini.jpg"}
@@ -108,20 +109,8 @@ export default function DashboardHeader() {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end">
-            <Link href="/profile">
-              <DropdownMenuItem>
-                <User2Icon /> Profile
-              </DropdownMenuItem>
-            </Link>
-
-            <Link href="/profile/changePassword">
-              <DropdownMenuItem>
-                <KeyIcon /> Change Password
-              </DropdownMenuItem>
-            </Link>
-
             <DropdownMenuItem
-              className="text-[#e5102e] hover:bg-[#feecee]"
+              className="text-[#e5102e] hover:bg-[#feecee] cursor-pointer"
               onClick={() => setLogoutDialogOpen(true)}
             >
               <LogOut /> Sign Out
@@ -148,10 +137,15 @@ export default function DashboardHeader() {
             <Button
               variant="outline"
               onClick={() => setLogoutDialogOpen(false)}
+              className="cursor-pointer"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleLogout}>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              className="cursor-pointer"
+            >
               Log Out
             </Button>
           </DialogFooter>

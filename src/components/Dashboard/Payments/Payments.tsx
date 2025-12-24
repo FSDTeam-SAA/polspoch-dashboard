@@ -228,7 +228,7 @@ export default function Payments() {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentPayments = payments.slice(
     startIndex,
-    startIndex + ITEMS_PER_PAGE
+    startIndex + ITEMS_PER_PAGE,
   );
 
   const handlePageChange = (page: number) => {
@@ -383,7 +383,7 @@ export default function Payments() {
                           status === "Paid" && "bg-green-100 text-green-700",
                           status === "Pending" &&
                             "bg-yellow-100 text-yellow-700",
-                          status === "Unpaid" && "bg-red-100 text-red-700"
+                          status === "Unpaid" && "bg-red-100 text-red-700",
                         )}
                       >
                         {status}

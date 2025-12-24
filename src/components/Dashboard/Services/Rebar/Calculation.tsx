@@ -1,40 +1,90 @@
 "use client";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
-
-const initialData = [
-  { diameter: 6, price: 1.13, weight: 0.23 },
-  { diameter: 8, price: 0.957, weight: 0.41 },
-  { diameter: 10, price: 0.93, weight: 0.64 },
-  { diameter: 12, price: 0.89, weight: 0.92 },
-  { diameter: 16, price: 0.882, weight: 1.63 },
-  { diameter: 20, price: 0.882, weight: 2.55 },
-  { diameter: 25, price: 0.894, weight: 3.98 },
-];
+import {
+  RebarMaterialData,
+  ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
+} from "@/types/servicesCalculation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Calculation() {
-  const [rows, setRows] = useState(initialData);
+  const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
-  const [labour, setLabour] = useState({
-    startingPrice: 10,
-    pricePerKg: 0.2,
-  });
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
+    );
+  }
 
-  const [margin, setMargin] = useState({
-    value: 1.6,
-  });
+  if (!servicesCalculation?.rebar) {
+    return (
+      <div className="p-6 text-center text-xl text-red-500">
+        No Rebar Data Found
+      </div>
+    );
+  }
+
+  return (
+    <RebarForm
+      initialData={servicesCalculation.rebar}
+      onSubmit={updateServices}
+    />
+  );
+}
+
+function RebarForm({
+  initialData,
+  onSubmit,
+}: {
+  initialData: ServiceDetail<RebarMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
+}) {
+  const [rows, setRows] = useState<RebarMaterialData[]>(
+    initialData.materialData || []
+  );
+
+  const [labour, setLabour] = useState(
+    initialData.labour || {
+      startingPrice: 10,
+      pricePerKg: 0.2,
+    }
+  );
+
+  const [margin, setMargin] = useState(initialData.margin || 1.6);
 
   const handleChange = (index: number, value: string) => {
-    const updated = [...rows];
-    updated[index].price = Number(value);
-    setRows(updated);
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, price: Number(value) } : row
+      )
+    );
   };
 
-  const handleSubmit = () => {
-    console.log("Rebar Data:", rows);
-    console.log("Labour Data:", labour);
-    console.log("Margin Data:", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "rebar",
+      materialData: rows,
+      labour,
+      margin,
+    };
+    // console.log(data);
+    try {
+      await onSubmit(data);
+      toast.success("Rebar calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update rebar calculation:", error);
+      toast.error("Failed to update rebar calculation.");
+    }
   };
 
   return (
@@ -140,8 +190,8 @@ export default function Calculation() {
                 Cost × Margin
                 <input
                   type="number"
-                  value={margin.value}
-                  onChange={(e) => setMargin({ value: +e.target.value })}
+                  value={margin}
+                  onChange={(e) => setMargin(+e.target.value)}
                   className="w-20 bg-yellow-200 text-center outline-none"
                 />
               </td>
