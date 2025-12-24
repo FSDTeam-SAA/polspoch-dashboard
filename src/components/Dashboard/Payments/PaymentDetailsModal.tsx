@@ -39,7 +39,7 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
       : payment.orderId.type === "cart"
         ? (cartItems
             .map(
-              (item) => item.cartId?.product?.productId?.productImage?.[0]?.url
+              (item) => item.cartId?.product?.productId?.productImage?.[0]?.url,
             )
             .filter(Boolean) as string[])
         : ["/placeholder.svg"];
@@ -87,7 +87,7 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
                       "relative h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all",
                       activeImage === img
                         ? "border-primary opacity-100"
-                        : "border-transparent opacity-60 hover:opacity-100"
+                        : "border-transparent opacity-60 hover:opacity-100",
                     )}
                   >
                     <Image
@@ -219,7 +219,7 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
                     payment.status === "success" &&
                       "bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 border-green-200",
                     payment.status !== "success" &&
-                      "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 border-red-200"
+                      "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 border-red-200",
                   )}
                 >
                   {payment.status}

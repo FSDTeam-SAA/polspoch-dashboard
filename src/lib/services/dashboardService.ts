@@ -28,7 +28,7 @@ class DashboardService {
    */
   async getAllChartData(): Promise<ChartDataResponse> {
     const response = await axiosInstance.get<ChartDataResponse>(
-      "/analytics/chart-data"
+      "/analytics/chart-data",
     );
     return response.data;
   }
@@ -37,9 +37,8 @@ class DashboardService {
    * Get general analytics overview
    */
   async getAnalytics(): Promise<AnalyticsResponse> {
-    const response = await axiosInstance.get<AnalyticsResponse>(
-      "/analytics/data"
-    );
+    const response =
+      await axiosInstance.get<AnalyticsResponse>("/analytics/data");
     return response.data;
   }
 }

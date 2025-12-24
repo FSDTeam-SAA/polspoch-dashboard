@@ -1,124 +1,92 @@
 "use client";
+import {
+  useServicesCalculation,
+  useUpdateServicesCalculation,
+} from "@/lib/hooks/useServicesCalculation";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
-
-const initialTable = [
-  {
-    thickness: 0.6,
-    rawsteel: "",
-    galvanized: 1.41,
-    corten: "",
-    teardrod: "",
-    white: 1.96,
-    red: 1.96,
-    darkGreen: 1.96,
-  },
-  {
-    thickness: 0.8,
-    rawsteel: "",
-    galvanized: 1.35,
-    corten: "",
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 1,
-    rawsteel: "",
-    galvanized: 1.29,
-    corten: "",
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 1.5,
-    rawsteel: 1.08,
-    galvanized: 1.26,
-    corten: 1.7,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 2,
-    rawsteel: 1.0,
-    galvanized: 1.26,
-    corten: 1.64,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 3,
-    rawsteel: 0.99,
-    galvanized: 1.26,
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 4,
-    rawsteel: 0.99,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 5,
-    rawsteel: 0.99,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: 1.38,
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-  {
-    thickness: 6,
-    rawsteel: 1.008,
-    galvanized: "",
-    corten: 1.55,
-    teardrod: "",
-    white: "",
-    red: "",
-    darkGreen: "",
-  },
-];
+import {
+  BendingMaterialData,
+  ServiceDetail,
+  ServicesCalculationData,
+  ServiceUpdatePayload,
+} from "@/types/servicesCalculation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function BendingCalculation() {
-  const [rows, setRows] = useState(initialTable);
+  const { data: servicesCalculation, isLoading } = useServicesCalculation();
+  const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
-  const [labour, setLabour] = useState({
-    startingPrice: 20,
-    pricePerBend: 8,
-  });
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
+    );
+  }
 
-  const [margin, setMargin] = useState({
-    value: 1.8,
-  });
+  if (!servicesCalculation?.bending) {
+    return (
+      <div className="p-6 text-center text-xl text-red-500">
+        No Bending Data Found
+      </div>
+    );
+  }
 
-  const handleChange = (index: number, key: string, value: string) => {
-    const updated = [...rows];
-    // @ts-expect-error: key is typed as string but used to index specific object shape
-    updated[index][key] = Number(value);
-    setRows(updated);
+  return (
+    <BendingForm
+      initialData={servicesCalculation.bending}
+      onSubmit={updateServices}
+    />
+  );
+}
+
+function BendingForm({
+  initialData,
+  onSubmit,
+}: {
+  initialData: ServiceDetail<BendingMaterialData>;
+  onSubmit: (
+    data: ServiceUpdatePayload
+  ) => Promise<ServicesCalculationData | null>;
+}) {
+  const [rows, setRows] = useState<BendingMaterialData[]>(
+    initialData.materialData || []
+  );
+  const [labour, setLabour] = useState(
+    initialData.labour || {
+      startingPrice: 20,
+      pricePerBend: 8,
+    }
+  );
+  const [margin, setMargin] = useState(initialData.margin || 1.8);
+
+  const handleChange = (
+    index: number,
+    key: keyof BendingMaterialData,
+    value: string
+  ) => {
+    setRows((prev) =>
+      prev.map((row, i) =>
+        i === index ? { ...row, [key]: Number(value) } : row
+      )
+    );
   };
 
-  const handleSubmit = () => {
-    console.log("BENDING DATA:", rows);
-    console.log("LABOUR", labour);
-    console.log("MARGIN", margin);
+  const handleSubmit = async () => {
+    const data: ServiceUpdatePayload = {
+      type: "bending",
+      materialData: rows,
+      labour,
+      margin,
+    };
+
+    try {
+      await onSubmit(data);
+      toast.success("Bending calculation updated successfully!");
+    } catch (error) {
+      console.error("Failed to update bending calculation:", error);
+      toast.error("Failed to update bending calculation.");
+    }
   };
 
   return (
@@ -174,7 +142,7 @@ export default function BendingCalculation() {
                   "rawsteel",
                   "galvanized",
                   "corten",
-                  "teardrod",
+                  "teardrop",
                   "white",
                   "red",
                   "darkGreen",
@@ -183,10 +151,10 @@ export default function BendingCalculation() {
                 <td
                   key={key}
                   className={`border border-black p-1 text-center ${
-                    row[key] !== "" ? "bg-yellow-200" : "bg-gray-200"
+                    row[key] !== 0 ? "bg-yellow-200" : "bg-gray-200"
                   }`}
                 >
-                  {row[key] !== "" && (
+                  {row[key] !== 0 && (
                     <input
                       type="number"
                       value={row[key]}
@@ -265,8 +233,8 @@ export default function BendingCalculation() {
                 <input
                   type="number"
                   step="0.1"
-                  value={margin.value}
-                  onChange={(e) => setMargin({ value: +e.target.value })}
+                  value={margin}
+                  onChange={(e) => setMargin(+e.target.value)}
                   className="w-20 bg-yellow-200 text-center outline-none"
                 />
               </td>
