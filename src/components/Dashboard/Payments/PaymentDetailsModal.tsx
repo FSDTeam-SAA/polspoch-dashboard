@@ -15,7 +15,40 @@ import { Eye, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
-  const [activeImage, setActiveImage] = useState(payment.productImages[0]);
+  const order = payment.orderId;
+  const isProductOrder = order.type === "product" && !!order.product;
+  const product = order.product?.productId;
+  const selectedFeature = order.selectedFeature;
+
+  const cartItems = order.cartItems || [];
+  const cartItemCount = cartItems.length;
+
+  const productName = isProductOrder
+    ? product?.productName || "Unknown Product"
+    : cartItemCount > 0
+      ? `Cart Order (${cartItemCount} item${cartItemCount > 1 ? "s" : ""})`
+      : "Cart Order";
+
+  const description = isProductOrder
+    ? product?.unitSizeCustomizationNote || "Standard product order"
+    : "Multiple items from cart browser";
+
+  const productImages =
+    isProductOrder && product?.productImage?.length
+      ? product.productImage.map((img) => img.url)
+      : payment.orderId.type === "cart"
+        ? (cartItems
+            .map(
+              (item) => item.cartId?.product?.productId?.productImage?.[0]?.url,
+            )
+            .filter(Boolean) as string[])
+        : ["/placeholder.svg"];
+
+  // Ensure at least one image exists
+  if (productImages.length === 0) productImages.push("/placeholder.svg");
+
+  const [activeImage, setActiveImage] = useState(productImages[0]);
+
   return (
     <div>
       <Dialog>
@@ -41,12 +74,12 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
                   height={600}
                   width={600}
                   src={activeImage}
-                  alt={payment.productName}
+                  alt={productName}
                   className="h-full w-full object-cover"
                 />
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2">
-                {payment.productImages.map((img: string, index: number) => (
+                {productImages.map((img: string, index: number) => (
                   <button
                     key={index}
                     onClick={() => setActiveImage(img)}
@@ -54,7 +87,7 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
                       "relative h-20 w-20 shrink-0 overflow-hidden rounded-md border-2 transition-all",
                       activeImage === img
                         ? "border-primary opacity-100"
-                        : "border-transparent opacity-60 hover:opacity-100"
+                        : "border-transparent opacity-60 hover:opacity-100",
                     )}
                   >
                     <Image
@@ -73,98 +106,120 @@ export default function PaymentDetailsModal({ payment }: { payment: Payment }) {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-foreground">
-                  {payment.productName}
+                  {productName}
                 </h2>
                 <p className="text-muted-foreground mt-2 leading-relaxed">
-                  {payment.description}
+                  {description}
                 </p>
               </div>
 
-              {/* Specifications Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Longest Side (mm)
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.longestSide}
+              {/* Specifications Grid or Cart Items */}
+              {isProductOrder && selectedFeature ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Size 1 (mm)
+                    </label>
+                    <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
+                      {selectedFeature.size1}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Size 2 (mm)
+                    </label>
+                    <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
+                      {selectedFeature.size2}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Thickness
+                    </label>
+                    <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
+                      {selectedFeature.thickness}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Finish/Quality
+                    </label>
+                    <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
+                      {selectedFeature.finishQuality}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Reference
+                    </label>
+                    <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
+                      {selectedFeature.reference}
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Shortest Side (mm)
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.shortestSide}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Thickness
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.thickness}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Long
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.long}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Finish
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.finish}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">
-                    Quality
-                  </label>
-                  <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                    {payment.specifications.quality}
-                  </div>
-                </div>
-              </div>
+              ) : cartItems.length > 0 ? (
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Order Items
+                  </h3>
+                  <div className="grid gap-3 max-h-[280px] overflow-y-auto pr-2">
+                    {cartItems.map((item, idx) => {
+                      const detail = item.cartId;
+                      if (!detail) return null;
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Manufacturing process
-                </label>
-                <div className="rounded-md bg-muted/50 px-3 py-2 text-sm font-medium border">
-                  {payment.specifications.manufacturingProcess}
+                      const itemName =
+                        detail.type === "product"
+                          ? detail.product?.productId?.productName
+                          : detail.service?.templateName;
+
+                      return (
+                        <div
+                          key={detail._id || idx}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium text-sm leading-none">
+                              {itemName || "Unknown Item"}
+                            </span>
+                            <span className="text-xs text-muted-foreground capitalize">
+                              {detail.type} • Qty: {detail.quantity}
+                            </span>
+                          </div>
+                          <div className="text-sm font-bold text-foreground">
+                            €{detail.totalAmount?.toLocaleString() ?? "0"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 rounded-lg bg-muted/30 border">
+                  <p className="text-sm text-muted-foreground">
+                    This payment is for a cart order containing multiple items.
+                    Individual details are available in the Orders section.
+                  </p>
+                </div>
+              )}
 
               {/* Footer Price & Status */}
               <div className="flex items-center justify-between pt-4 border-t mt-6">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">Total Price:</span>
+                  <span className="text-lg font-semibold">Total Paid:</span>
                   <span className="text-3xl font-bold text-primary">
                     €{payment.amount}
                   </span>
                 </div>
                 <Badge
                   variant={
-                    payment.status === "Paid"
-                      ? "default"
-                      : payment.status === "Pending"
-                        ? "secondary"
-                        : "destructive"
+                    payment.status === "success" ? "default" : "destructive"
                   }
                   className={cn(
-                    "px-4 py-1 text-base",
-                    payment.status === "Paid" &&
+                    "px-4 py-1 text-base capitalize",
+                    payment.status === "success" &&
                       "bg-green-100 text-green-700 hover:bg-green-200 hover:text-green-800 border-green-200",
-                    payment.status === "Pending" &&
-                      "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 hover:text-yellow-800 border-yellow-200",
-                    payment.status === "Unpaid" &&
-                      "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 border-red-200"
+                    payment.status !== "success" &&
+                      "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800 border-red-200",
                   )}
                 >
                   {payment.status}

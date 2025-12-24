@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface CardOverviewProps {
   title: string;
-  numberInfo: string | number;
+  numberInfo: React.ReactNode;
   icon: ReactNode;
 }
 

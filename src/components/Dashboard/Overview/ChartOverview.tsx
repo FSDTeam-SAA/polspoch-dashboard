@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import {
   XAxis,
@@ -11,17 +10,15 @@ import {
   AreaChart,
 } from "recharts";
 import { Card } from "@/components/ui/card";
-
-interface ApiChartData {
-  month: string;
-  revenue: number;
-}
+import { useChartData } from "@/lib/hooks/useDashboard";
+import { ChartData } from "@/lib/types/chartdata";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomTooltipPayload {
   value: number;
   name: string;
   dataKey: string;
-  payload: ApiChartData;
+  payload: ChartData;
   color: string;
 }
 
@@ -42,7 +39,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
       <div className="bg-white shadow-md rounded-lg p-3 border text-sm">
         <p className="text-gray-500">Revenue</p>
         <p className="text-xl font-bold text-gray-800">
-          ${p.value.toLocaleString()}
+          €{p.value.toLocaleString()}
         </p>
         <p className="text-gray-500">{label}</p>
       </div>
@@ -51,23 +48,47 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   return null;
 };
 
-// Fake JSON data
-const fakeData: ApiChartData[] = [
-  { month: "Jan", revenue: 12000 },
-  { month: "Feb", revenue: 15000 },
-  { month: "Mar", revenue: 8000 },
-  { month: "Apr", revenue: 17000 },
-  { month: "May", revenue: 14000 },
-  { month: "Jun", revenue: 20000 },
-  { month: "Jul", revenue: 18000 },
-  { month: "Aug", revenue: 22000 },
-  { month: "Sep", revenue: 19000 },
-  { month: "Oct", revenue: 24000 },
-  { month: "Nov", revenue: 21000 },
-  { month: "Dec", revenue: 25000 },
-];
+const SKELETON_HEIGHTS = [40, 25, 35, 45, 60, 55, 70, 65, 80, 75, 90, 85];
 
 const ChartOverview: React.FC = () => {
+  const { data: chartData = [], isLoading } = useChartData();
+
+  // Show loading state using ShadCN Skeleton
+  if (isLoading) {
+    return (
+      <Card className="p-6 rounded-2xl h-[450px] shadow-sm flex flex-col justify-between">
+        <div className="flex justify-between items-center mb-8">
+          <Skeleton className="h-6 w-32" />
+        </div>
+
+        <div className="flex-1 flex items-end gap-2 px-2 pb-10">
+          {SKELETON_HEIGHTS.map((height, i) => (
+            <Skeleton
+              key={i}
+              className="flex-1 rounded-t-md"
+              style={{
+                height: `${height}%`,
+                opacity: (i + 1) / 12, // Suggests a trend
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="flex justify-between px-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-4 w-10" />
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  // Abbreviate months if they are too long (e.g., "January" -> "Jan")
+  const formattedData = chartData.map((item) => ({
+    ...item,
+    month: item.month.substring(0, 3),
+  }));
+
   return (
     <Card className="p-6 rounded-2xl h-[450px] shadow-sm">
       <div className="flex justify-between items-center mb-4">
@@ -79,7 +100,7 @@ const ChartOverview: React.FC = () => {
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={fakeData} // ✅ using fake JSON data
+            data={formattedData}
             margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
           >
             <defs>
@@ -109,7 +130,7 @@ const ChartOverview: React.FC = () => {
 
             <Area
               type="monotone"
-              dataKey="revenue"
+              dataKey="totalAmount"
               stroke="#14b8a6"
               fill="url(#colorRevenue)"
               fillOpacity={1}
