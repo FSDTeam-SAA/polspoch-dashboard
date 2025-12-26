@@ -20,7 +20,8 @@ export default function Login() {
   const router = useRouter();
 
   // Handle Sign In
-  const handleSignIn = async () => {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
 
     try {
@@ -54,70 +55,72 @@ export default function Login() {
         </p>
 
         {/* Form */}
-        <div className="mt-6 space-y-4">
-          <div>
-            <Label className="text-sm font-medium text-gray-700">
-              Email Address
-            </Label>
-            <Input
-              type="email"
-              placeholder="hello@example.com"
-              className="mt-1 py-5"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label className="text-sm font-medium text-gray-700">
-              Password
-            </Label>
-
-            <div className="relative mt-1">
+        <form>
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
               <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="********"
-                className="pr-10 py-5"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="email"
+                placeholder="hello@example.com"
+                className="mt-1 py-5"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 cursor-pointer"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="remember" />
-              <label
-                htmlFor="remember"
-                className="text-sm text-gray-600 cursor-pointer"
-              >
-                Remember me
-              </label>
             </div>
 
-            <Link
-              href={"/forget-password"}
-              className="text-sm text-red-600 hover:underline cursor-pointer"
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                Password
+              </Label>
+
+              <div className="relative mt-1">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="********"
+                  className="pr-10 py-5"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox id="remember" />
+                <label
+                  htmlFor="remember"
+                  className="text-sm text-gray-600 cursor-pointer"
+                >
+                  Remember me
+                </label>
+              </div>
+
+              <Link
+                href={"/forget-password"}
+                className="text-sm text-red-600 hover:underline cursor-pointer"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <Button
+              className="w-full bg-[#8A1B00] hover:bg-[#701600] mt-4 text-white cursor-pointer"
+              onClick={handleSignIn}
+              disabled={isLoading}
             >
-              Forgot password?
-            </Link>
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
           </div>
-
-          <Button
-            className="w-full bg-[#8A1B00] hover:bg-[#701600] mt-4 text-white cursor-pointer"
-            onClick={handleSignIn}
-            disabled={isLoading}
-          >
-            {isLoading ? "Signing in..." : "Sign In"}
-          </Button>
-        </div>
+        </form>
       </div>
     </div>
   );

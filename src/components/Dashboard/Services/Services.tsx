@@ -1,6 +1,7 @@
+// Services.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,19 +16,26 @@ import { Ruler, CheckCircle2, ArrowRight, Pencil, Layers } from "lucide-react";
 import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
 import Link from "next/link";
+import { useRebarTemplates } from "@/lib/hooks/useRebarServices";
+import { RebarTemplate } from "@/types/rebar";
 
 // --- Demo Data ---
-interface ShapeDimension {
+export interface ShapeDimension {
   label: string;
   value: string;
+  key?: string; // Added for Rebar API
+  min?: number;
+  max?: number;
 }
 
-interface ShapeSpec {
+export interface ShapeSpec {
   material: string[];
   thickness: string[];
 }
 
-interface ServiceItem {
+export interface ServiceItem {
+  id?: string; // Added for API mapping
+  templateId?: string; // Added for Rebar ID
   shepName: string;
   type: "rebar" | "cutting" | "bending";
   title: string;
@@ -36,83 +44,6 @@ interface ServiceItem {
   dimensions: ShapeDimension[];
   image?: string;
 }
-
-const initialRebarData: ServiceItem[] = [
-  {
-    shepName: "shape-l",
-    type: "rebar",
-    title: "Shape L",
-    description:
-      "Standard L-shaped rebar specification for structural corners.",
-    image: "/images/shape-l.png",
-    specs: {
-      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
-      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
-    },
-    dimensions: [
-      { label: "Size L", value: "50 – 1980" },
-      { label: "Size A", value: "30 – 250" },
-      { label: "Size B", value: "30 – 250" },
-      { label: "Degree 1 (A-B)", value: "80 – 135" },
-    ],
-  },
-  {
-    shepName: "shape-z",
-    type: "rebar",
-    title: "Shape Z",
-    description: "Z-shaped rebar configuration for complex reinforcements.",
-    image: "/images/shape-z.png",
-    specs: {
-      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
-      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
-    },
-    dimensions: [
-      { label: "Size Z", value: "100 – 1980" },
-      { label: "Size A", value: "30 – 180" },
-      { label: "Size C", value: "30 – 180" },
-      { label: "Degree 1 (A-B)", value: "90" },
-      { label: "Degree 2", value: "90" },
-    ],
-  },
-  {
-    shepName: "shape-u",
-    type: "rebar",
-    title: "Shape U",
-    description: "U-shaped rebar configuration for complex reinforcements.",
-    image: "/images/shape-u.png",
-    specs: {
-      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
-      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
-    },
-    dimensions: [
-      { label: "Size U", value: "100 – 1980" },
-      { label: "Size A", value: "30 – 180" },
-      { label: "Size B", value: "50 – 250" },
-      { label: "Size C", value: "50 – 180" },
-      { label: "Degree 1 (A-B)", value: "90" },
-      { label: "Degree 2 (B-C)", value: "90" },
-    ],
-  },
-  {
-    shepName: "shape-omega",
-    type: "rebar",
-    title: "Shape Omega",
-    description: "Omega-shaped rebar configuration for complex reinforcements.",
-    image: "/images/shape-omega.png",
-    specs: {
-      material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
-      thickness: ["1", "1.5", "2", "2.5", "3", "4", "5", "6", "8"],
-    },
-    dimensions: [
-      { label: "Size Omega", value: "100 – 1980" },
-      { label: "Size A", value: "30 – 180" },
-      { label: "Size B", value: "50 – 250" },
-      { label: "Size C", value: "50 – 180" },
-      { label: "Degree 1 (A-B)", value: "90" },
-      { label: "Degree 2 (B-C)", value: "90" },
-    ],
-  },
-];
 
 // --- Cutting Data ---
 const initialCuttingData: ServiceItem[] = [
@@ -203,8 +134,49 @@ export default function Services() {
   const [activeTab, setActiveTab] = useState("rebar");
 
   // State for each service type
-  const [rebarServices, setRebarServices] =
-    useState<ServiceItem[]>(initialRebarData);
+  const { data: rebarData, isLoading: isRebarLoading } = useRebarTemplates();
+  // Store local edits by ID (or shepName if ID is missing/unstable, but ideally ID)
+  // We use shepName as the key because handleSaveService currently matches by shepName
+  const [localRebarEdits, setLocalRebarEdits] = useState<
+    Record<string, ServiceItem>
+  >({});
+
+  // Derive rebarServices from data + local edits
+  const rebarServices = useMemo(() => {
+    if (!rebarData) return [];
+
+    return rebarData.map((t: RebarTemplate) => {
+      // Base mapped item
+      const baseItem: ServiceItem = {
+        id: t._id,
+        templateId: t.templateId,
+        shepName: t.shapeName,
+        type: "rebar",
+        title: t.shapeName,
+        description: "Rebar template specification",
+        image: t.imageUrl,
+        specs: {
+          material: ["Rawseel", "Galvanized", "Corten", "Teardrop"],
+          thickness: t.availableDiameters.map(String),
+        },
+        dimensions: t.dimensions.map((d) => ({
+          label: d.label,
+          value:
+            d.minRange === d.maxRange
+              ? `${d.minRange} ${d.unit}`
+              : `${d.minRange} – ${d.maxRange} ${d.unit}`,
+          key: d.key,
+          min: d.minRange,
+          max: d.maxRange,
+        })),
+      };
+
+      // Check for local overrides
+      const override = localRebarEdits[t.shapeName];
+      return override ? override : baseItem;
+    });
+  }, [rebarData, localRebarEdits]);
+
   const [cuttingServices, setCuttingServices] =
     useState<ServiceItem[]>(initialCuttingData);
   const [bendingServices, setBendingServices] =
@@ -227,7 +199,11 @@ export default function Services() {
       );
 
     if (activeTab === "rebar") {
-      setRebarServices((prev) => updateList(prev));
+      // Save to local edits map
+      setLocalRebarEdits((prev) => ({
+        ...prev,
+        [updatedService.shepName]: updatedService,
+      }));
     } else if (activeTab === "cutting") {
       setCuttingServices((prev) => updateList(prev));
     } else if (activeTab === "bending") {
@@ -238,6 +214,7 @@ export default function Services() {
   return (
     <div className="container mx-auto py-10 space-y-8">
       <EditServiceDialog
+        key={editingService?.shepName ?? "dialog"}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         service={editingService}
@@ -288,15 +265,23 @@ export default function Services() {
           value="rebar"
           className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
         >
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {rebarServices.map((item) => (
-              <ShapeCard
-                key={item.shepName}
-                item={item}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
+          {isRebarLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-muted-foreground animate-pulse">
+                Loading templates...
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {rebarServices.map((item) => (
+                <ShapeCard
+                  key={item.shepName}
+                  item={item}
+                  onEdit={() => handleEditClick(item)}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Cutting Tab Content */}
@@ -344,11 +329,11 @@ function ShapeCard({
   onEdit: () => void;
 }) {
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg border-[#7E1800]/20 dark:border-[#7E1800]/40 group">
+    <Card className="overflow-hidden pt-0! pb-0! transition-all duration-300 hover:shadow-lg border-[#7E1800]/20 dark:border-[#7E1800]/40 group">
       <CardHeader className="bg-[#7E1800]/5 border-b border-[#7E1800]/20 pb-6">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <CardTitle className="text-2xl flex items-center gap-2 text-[#7E1800]">
+            <CardTitle className="text-2xl py-2 flex items-center gap-2 text-[#7E1800]">
               {item.title}
             </CardTitle>
             <CardDescription className="text-balance text-muted-foreground">
@@ -361,8 +346,8 @@ function ShapeCard({
       <CardContent className="p-6 space-y-8">
         {/* Shape Image */}
         {item.image && (
-          <div className="flex justify-center py-4">
-            <div className="relative w-48 h-48">
+          <div className="flex justify-center py-0!">
+            <div className="relative w-68 h-68">
               <Image
                 src={item.image}
                 alt={item.title}
@@ -375,23 +360,25 @@ function ShapeCard({
 
         {/* Material & Thickness Section */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <Layers className="h-4 w-4 text-[#7E1800]" />
-              Materials
+          {item.specs.material && item.specs.material.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                <Layers className="h-4 w-4 text-[#7E1800]" />
+                Materials
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {item.specs.material.map((mat) => (
+                  <Badge
+                    key={mat}
+                    variant="secondary"
+                    className="font-normal bg-[#7E1800]/10 text-[#7E1800] border-transparent hover:bg-[#7E1800]/20"
+                  >
+                    {mat}
+                  </Badge>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {item.specs.material.map((mat) => (
-                <Badge
-                  key={mat}
-                  variant="secondary"
-                  className="font-normal bg-[#7E1800]/10 text-[#7E1800] border-transparent hover:bg-[#7E1800]/20"
-                >
-                  {mat}
-                </Badge>
-              ))}
-            </div>
-          </div>
+          )}
 
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
