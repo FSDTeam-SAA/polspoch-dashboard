@@ -23,6 +23,10 @@ import {
   useUpdateBendingImage,
   useUpdateBendingDimension,
 } from "@/lib/hooks/useBendingServices";
+import {
+  useUpdateCuttingImage,
+  useUpdateCuttingData,
+} from "@/lib/hooks/useCuttingServices";
 import { toast } from "sonner";
 
 interface EditServiceDialogProps {
@@ -40,6 +44,8 @@ export function EditServiceDialog({
   const updateRebarLabel = useUpdateRebarLabel();
   const updateBendingImage = useUpdateBendingImage();
   const updateBendingDimension = useUpdateBendingDimension();
+  const updateCuttingImage = useUpdateCuttingImage();
+  const updateCuttingData = useUpdateCuttingData();
 
   // Fetch details if it's a rebar template
   const { data: detailedData, isLoading } = useRebarTemplateDetails(
@@ -162,6 +168,13 @@ export function EditServiceDialog({
           });
         }
 
+        if (service.type === "cutting") {
+          await updateCuttingImage.mutateAsync({
+            templateId: formData.templateId,
+            file: selectedFile,
+          });
+        }
+
         toast.success("Image updated successfully");
       }
 
@@ -181,6 +194,16 @@ export function EditServiceDialog({
 
             if (service.type === "bending") {
               await updateBendingDimension.mutateAsync({
+                templateId: formData.templateId,
+                key: dim.key,
+                newLabel: dim.label,
+                min: Number(dim.min),
+                max: Number(dim.max),
+              });
+            }
+
+            if (service.type === "cutting") {
+              await updateCuttingData.mutateAsync({
                 templateId: formData.templateId,
                 key: dim.key,
                 newLabel: dim.label,

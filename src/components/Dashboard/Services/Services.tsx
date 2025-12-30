@@ -18,8 +18,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRebarTemplates } from "@/lib/hooks/useRebarServices";
 import { useBendingTemplates } from "@/lib/hooks/useBendingServices";
+import { useCuttingTemplates } from "@/lib/hooks/useCuttingServices";
 import { RebarTemplate } from "@/types/rebar";
 import { BendingTemplate } from "@/types/bending";
+import { CuttingTemplate } from "@/types/cutting";
 
 // --- Demo Data ---
 export interface ShapeDimension {
@@ -46,55 +48,6 @@ export interface ServiceItem {
   dimensions: ShapeDimension[];
   image?: string;
 }
-
-// --- Cutting Data ---
-const initialCuttingData: ServiceItem[] = [
-  {
-    shepName: "cut-laser",
-    type: "cutting",
-    title: "Laser Cutting",
-    description: "High-precision laser cutting for detailed shapes.",
-    image: "/images/laser-cutting.png",
-    specs: {
-      material: ["Steel", "Stainless", "Aluminum", "Copper"],
-      thickness: [
-        "0.5",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "8",
-        "10",
-        "12",
-        "15",
-        "20",
-      ],
-    },
-    dimensions: [
-      { label: "Max Width", value: "1500" },
-      { label: "Max Length", value: "3000" },
-      { label: "Tolerance", value: "±0.1" },
-    ],
-  },
-  {
-    shepName: "cut-plasma",
-    type: "cutting",
-    title: "Plasma Cutting",
-    description: "Cost-effective cutting for thick metal plates.",
-    image: "/images/plasma-cutting.png",
-    specs: {
-      material: ["Steel", "Stainless", "Aluminum"],
-      thickness: ["5", "10", "15", "20", "25", "30", "40", "50"],
-    },
-    dimensions: [
-      { label: "Max Width", value: "2000" },
-      { label: "Max Length", value: "6000" },
-      { label: "Tolerance", value: "±1.0" },
-    ],
-  },
-];
 
 export default function Services() {
   const [activeTab, setActiveTab] = useState("rebar");
@@ -135,7 +88,36 @@ export default function Services() {
     });
   }, [rebarData]);
 
-  const [cuttingServices] = useState<ServiceItem[]>(initialCuttingData);
+  const { data: cuttingData, isLoading: isCuttingLoading } =
+    useCuttingTemplates();
+
+  const cuttingServices = useMemo<ServiceItem[]>(() => {
+    if (!cuttingData) return [];
+
+    return cuttingData.map((t: CuttingTemplate) => ({
+      id: t._id,
+      templateId: t.templateId,
+      shepName: t.shapeName,
+      type: "cutting",
+      title: t.shapeName,
+      description: "Cutting template specification",
+      image: t.imageUrl,
+      specs: {
+        material: t.materials,
+        thickness: t.thicknesses.map(String),
+      },
+      dimensions: t.dimensions.map((d) => ({
+        label: d.label,
+        value:
+          d.minRange === d.maxRange
+            ? `${d.minRange} ${d.unit}`
+            : `${d.minRange} – ${d.maxRange} ${d.unit}`,
+        key: d.key,
+        min: d.minRange,
+        max: d.maxRange,
+      })),
+    }));
+  }, [cuttingData]);
 
   const { data: bendingData, isLoading: isBendingLoading } =
     useBendingTemplates();
@@ -258,15 +240,29 @@ export default function Services() {
           value="cutting"
           className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 "
         >
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {cuttingServices.map((item) => (
-              <ShapeCard
-                key={item.shepName}
-                item={item}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
+          {isCuttingLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-muted-foreground animate-pulse">
+                Loading cutting templates...
+              </span>
+            </div>
+          ) : cuttingServices.length === 0 ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-muted-foreground">
+                No cutting templates available.
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {cuttingServices.map((item) => (
+                <ShapeCard
+                  key={item.shepName}
+                  item={item}
+                  onEdit={() => handleEditClick(item)}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Bending Tab Content */}
