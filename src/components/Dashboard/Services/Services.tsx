@@ -17,7 +17,9 @@ import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
 import Link from "next/link";
 import { useRebarTemplates } from "@/lib/hooks/useRebarServices";
+import { useBendingTemplates } from "@/lib/hooks/useBendingServices";
 import { RebarTemplate } from "@/types/rebar";
+import { BendingTemplate } from "@/types/bending";
 
 // --- Demo Data ---
 export interface ShapeDimension {
@@ -94,52 +96,11 @@ const initialCuttingData: ServiceItem[] = [
   },
 ];
 
-// --- Bending Data ---
-const initialBendingData: ServiceItem[] = [
-  {
-    shepName: "bend-sheet",
-    type: "bending",
-    title: "Sheet Bending",
-    description: "Precision bending for metal sheets and plates.",
-    image: "/images/sheet-bending.png",
-    specs: {
-      material: ["Steel", "Stainless", "Aluminum"],
-      thickness: ["0.5", "1", "2", "3", "4", "5", "6"],
-    },
-    dimensions: [
-      { label: "Max Length", value: "3000" },
-      { label: "Min Angle", value: "30°" },
-      { label: "Accuracy", value: "±0.5°" },
-    ],
-  },
-  {
-    shepName: "bend-tube",
-    type: "bending",
-    title: "Tube Bending",
-    description: "Custom bending for round and square tubes.",
-    image: "/images/tube-bending.png",
-    specs: {
-      material: ["Steel", "Stainless", "Aluminum"],
-      thickness: ["1", "1.5", "2", "3"],
-    },
-    dimensions: [
-      { label: "Max Diameter", value: "100" },
-      { label: "Min Radius", value: "150" },
-      { label: "Max Angle", value: "180°" },
-    ],
-  },
-];
-
 export default function Services() {
   const [activeTab, setActiveTab] = useState("rebar");
 
   // State for each service type
   const { data: rebarData, isLoading: isRebarLoading } = useRebarTemplates();
-  // Store local edits by ID (or shepName if ID is missing/unstable, but ideally ID)
-  // We use shepName as the key because handleSaveService currently matches by shepName
-  const [localRebarEdits, setLocalRebarEdits] = useState<
-    Record<string, ServiceItem>
-  >({});
 
   // Derive rebarServices from data + local edits
   const rebarServices = useMemo(() => {
@@ -170,45 +131,54 @@ export default function Services() {
           max: d.maxRange,
         })),
       };
-
-      // Check for local overrides
-      const override = localRebarEdits[t.shapeName];
-      return override ? override : baseItem;
+      return baseItem;
     });
-  }, [rebarData, localRebarEdits]);
+  }, [rebarData]);
 
-  const [cuttingServices, setCuttingServices] =
-    useState<ServiceItem[]>(initialCuttingData);
-  const [bendingServices, setBendingServices] =
-    useState<ServiceItem[]>(initialBendingData);
+  const [cuttingServices] = useState<ServiceItem[]>(initialCuttingData);
+
+  const { data: bendingData, isLoading: isBendingLoading } =
+    useBendingTemplates();
+
+  const bendingServices = useMemo<ServiceItem[]>(() => {
+    if (!bendingData) return [];
+
+    return bendingData.map((t: BendingTemplate) => {
+      const baseItem: ServiceItem = {
+        id: t._id,
+        templateId: t.templateId,
+        shepName: t.shapeName,
+        type: "bending",
+        title: t.shapeName,
+        description: "Bending template specification",
+        image: t.imageUrl,
+        specs: {
+          material: t.materials,
+          thickness: t.thicknesses.map(String),
+        },
+        dimensions: t.dimensions.map((d) => ({
+          label: d.label,
+          value:
+            d.minRange === d.maxRange
+              ? `${d.minRange} ${d.unit}`
+              : `${d.minRange} – ${d.maxRange} ${d.unit}`,
+          key: d.key,
+          min: d.minRange,
+          max: d.maxRange,
+        })),
+      };
+      return baseItem;
+    });
+  }, [bendingData]);
 
   const [editingService, setEditingService] = useState<ServiceItem | null>(
-    null
+    null,
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleEditClick = (service: ServiceItem) => {
     setEditingService(service);
     setIsDialogOpen(true);
-  };
-  const handleSaveService = (updatedService: ServiceItem) => {
-    // Helper to update a specific list
-    const updateList = (list: ServiceItem[]) =>
-      list.map((item) =>
-        item.shepName === updatedService.shepName ? updatedService : item
-      );
-
-    if (activeTab === "rebar") {
-      // Save to local edits map
-      setLocalRebarEdits((prev) => ({
-        ...prev,
-        [updatedService.shepName]: updatedService,
-      }));
-    } else if (activeTab === "cutting") {
-      setCuttingServices((prev) => updateList(prev));
-    } else if (activeTab === "bending") {
-      setBendingServices((prev) => updateList(prev));
-    }
   };
 
   return (
@@ -218,7 +188,6 @@ export default function Services() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         service={editingService}
-        onSave={handleSaveService}
       />
       <div className="flex flex-col space-y-2 ">
         <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-[#7E1800] to-[#7E1800]/60 bg-clip-text text-transparent w-fit">
@@ -305,15 +274,29 @@ export default function Services() {
           value="bending"
           className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
         >
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {bendingServices.map((item) => (
-              <ShapeCard
-                key={item.shepName}
-                item={item}
-                onEdit={() => handleEditClick(item)}
-              />
-            ))}
-          </div>
+          {isBendingLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-muted-foreground animate-pulse">
+                Loading bending templates...
+              </span>
+            </div>
+          ) : bendingServices.length === 0 ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-muted-foreground">
+                No bending templates available.
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {bendingServices.map((item) => (
+                <ShapeCard
+                  key={item.shepName}
+                  item={item}
+                  onEdit={() => handleEditClick(item)}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
