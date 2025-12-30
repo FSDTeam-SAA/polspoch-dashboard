@@ -14,26 +14,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ServiceItem } from "./Services";
-import { rebarServices } from "@/lib/services/rebarServices";
-import { useRebarTemplateDetails } from "@/lib/hooks/useRebarServices";
+import {
+  useRebarTemplateDetails,
+  useUpdateRebarImage,
+  useUpdateRebarLabel,
+} from "@/lib/hooks/useRebarServices";
+import {
+  useUpdateBendingImage,
+  useUpdateBendingDimension,
+} from "@/lib/hooks/useBendingServices";
 import { toast } from "sonner";
 
 interface EditServiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   service: ServiceItem | null;
-  onSave: (updatedService: ServiceItem) => void;
 }
 
 export function EditServiceDialog({
   open,
   onOpenChange,
   service,
-  onSave,
 }: EditServiceDialogProps) {
+  const updateRebarImage = useUpdateRebarImage();
+  const updateRebarLabel = useUpdateRebarLabel();
+  const updateBendingImage = useUpdateBendingImage();
+  const updateBendingDimension = useUpdateBendingDimension();
+
   // Fetch details if it's a rebar template
   const { data: detailedData, isLoading } = useRebarTemplateDetails(
-    open && service?.templateId ? service.templateId : null
+    open && service?.templateId && service.type === "rebar"
+      ? service.templateId
+      : null,
   );
 
   // File state for uploads
@@ -72,7 +84,7 @@ export function EditServiceDialog({
 
   // Track the ID of the last detailed data we merged to avoid redundant updates
   const lastMergedIdRef = useRef<string | null>(
-    service?.templateId && detailedData ? detailedData._id : null
+    service?.templateId && detailedData ? detailedData._id : null,
   );
 
   // Update form data when detailedData arrives (async) or changes
@@ -117,7 +129,7 @@ export function EditServiceDialog({
   const handleDimensionChange = (
     index: number,
     field: "label" | "value",
-    value: string
+    value: string,
   ) => {
     setFormData((prev) => {
       if (!prev) return null;
@@ -132,49 +144,56 @@ export function EditServiceDialog({
     if (!formData || !service) return;
 
     try {
-      const updatedService = { ...formData };
-
       // 1. Handle Image Upload
       if (selectedFile && formData.templateId) {
         toast.info("Uploading image...");
-        const imageResponse = await rebarServices.updateRebarImage(
-          formData.templateId,
-          selectedFile
-        );
-        if (imageResponse.success) {
-          updatedService.image = imageResponse.data.imageUrl;
-          toast.success("Image updated successfully");
+
+        if (service.type === "rebar") {
+          await updateRebarImage.mutateAsync({
+            templateId: formData.templateId,
+            file: selectedFile,
+          });
         }
+
+        if (service.type === "bending") {
+          await updateBendingImage.mutateAsync({
+            templateId: formData.templateId,
+            file: selectedFile,
+          });
+        }
+
+        toast.success("Image updated successfully");
       }
 
-      // 2. Handle Dimension Updates (Rebar only)
+      // 2. Handle Dimension Updates
       if (formData.templateId) {
-        // Find changed dimensions
-        // but 'formData' dimensions come from 'detailedData' merge so they have keys.
-        // We should just iterate current formData dimensions and update them.
-        // Since API updates one by one, we'll loop.
-
-        for (const dim of updatedService.dimensions) {
+        for (const dim of formData.dimensions) {
           if (dim.key && dim.min !== undefined && dim.max !== undefined) {
-            // Check if it's different from initial?
-            // Optimization: We could check against 'detailedData' if available, but for now just update all "valid" keys or check dirty state.
-            // To keep it simple and robust per user request "Input Field Update... used to update", we'll update.
-            // Ideally only changed ones.
+            if (service.type === "rebar") {
+              await updateRebarLabel.mutateAsync({
+                templateId: formData.templateId,
+                key: dim.key,
+                newLabel: dim.label,
+                min: Number(dim.min),
+                max: Number(dim.max),
+              });
+            }
 
-            // Let's assume user wants to save what they see.
-            await rebarServices.updateRebarLabel({
-              templateId: formData.templateId,
-              key: dim.key,
-              newLabel: dim.label,
-              min: Number(dim.min),
-              max: Number(dim.max),
-            });
+            if (service.type === "bending") {
+              await updateBendingDimension.mutateAsync({
+                templateId: formData.templateId,
+                key: dim.key,
+                newLabel: dim.label,
+                min: Number(dim.min),
+                max: Number(dim.max),
+              });
+            }
           }
         }
+
         toast.success("Dimensions updated successfully");
       }
 
-      onSave(updatedService);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to update service", error);
@@ -243,6 +262,7 @@ export function EditServiceDialog({
                     type="file"
                     id="image-upload"
                     accept="image/*"
+                    title="Upload a new service image"
                     className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -354,7 +374,7 @@ export function EditServiceDialog({
                             handleDimensionChange(
                               index,
                               "value",
-                              e.target.value
+                              e.target.value,
                             )
                           }
                           className="h-8 text-sm border-[#7E1800]/20 focus-visible:ring-[#7E1800]"
