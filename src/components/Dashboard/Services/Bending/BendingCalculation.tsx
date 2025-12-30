@@ -1,3 +1,4 @@
+// BendingCalculation.tsx
 "use client";
 import {
   useServicesCalculation,
@@ -13,15 +14,14 @@ import {
 } from "@/types/servicesCalculation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CalculationSkeleton } from "../CalculationSkeleton";
 
 export default function BendingCalculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
   const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
-    return (
-      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
-    );
+    return <CalculationSkeleton title="Bending Calculation" />;
   }
 
   if (!servicesCalculation?.bending) {
@@ -46,29 +46,29 @@ function BendingForm({
 }: {
   initialData: ServiceDetail<BendingMaterialData>;
   onSubmit: (
-    data: ServiceUpdatePayload
+    data: ServiceUpdatePayload,
   ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<BendingMaterialData[]>(
-    initialData.materialData || []
+    initialData.materialData || [],
   );
   const [labour, setLabour] = useState(
     initialData.labour || {
       startingPrice: 20,
       pricePerBend: 8,
-    }
+    },
   );
   const [margin, setMargin] = useState(initialData.margin || 1.8);
 
   const handleChange = (
     index: number,
     key: keyof BendingMaterialData,
-    value: string
+    value: string,
   ) => {
     setRows((prev) =>
       prev.map((row, i) =>
-        i === index ? { ...row, [key]: Number(value) } : row
-      )
+        i === index ? { ...row, [key]: Number(value) } : row,
+      ),
     );
   };
 
