@@ -27,6 +27,7 @@ import {
   useUpdateCuttingImage,
   useUpdateCuttingData,
 } from "@/lib/hooks/useCuttingServices";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 interface EditServiceDialogProps {
@@ -232,17 +233,32 @@ export function EditServiceDialog({
             Edit Service: {service.title}
           </DialogTitle>
           <DialogDescription>
-            {isLoading
-              ? "Loading details..."
-              : "Make changes to the service details below. Click save when you're done."}
+            {isLoading ? (
+              <Skeleton className="h-4 w-full bg-[#7E1800]/5" />
+            ) : (
+              "Make changes to the service details below. Click save when you're done."
+            )}
           </DialogDescription>
         </DialogHeader>
 
         {isLoading && service.templateId ? (
-          <div className="flex justify-center py-8">
-            <span className="text-muted-foreground animate-pulse">
-              Loading detailed specifications...
-            </span>
+          <div className="space-y-6 py-4 animate-pulse">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-32 bg-[#7E1800]/10" />
+              <Skeleton className="h-48 w-full rounded-md bg-[#7E1800]/5" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-48 bg-[#7E1800]/10" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="p-3 border rounded-md space-y-3">
+                    <Skeleton className="h-3 w-16 bg-[#7E1800]/5" />
+                    <Skeleton className="h-8 w-full bg-[#7E1800]/10" />
+                    <Skeleton className="h-8 w-full bg-[#7E1800]/10" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 py-4">

@@ -1,3 +1,4 @@
+// CuttingCalculation.tsx
 "use client";
 import {
   useServicesCalculation,
@@ -13,15 +14,14 @@ import {
 } from "@/types/servicesCalculation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CalculationSkeleton } from "../CalculationSkeleton";
 
 export default function CuttingCalculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
   const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
-    return (
-      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
-    );
+    return <CalculationSkeleton title="Cutting Calculation" />;
   }
 
   if (!servicesCalculation?.cutting) {
@@ -46,18 +46,18 @@ function CuttingForm({
 }: {
   initialData: ServiceDetail<CuttingMaterialData>;
   onSubmit: (
-    data: ServiceUpdatePayload
+    data: ServiceUpdatePayload,
   ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<CuttingMaterialData[]>(
-    initialData.materialData || []
+    initialData.materialData || [],
   );
 
   const [labour, setLabour] = useState(
     initialData.labour || {
       startingPrice: 20,
       priceInternal: 1.5,
-    }
+    },
   );
 
   const [margin, setMargin] = useState(initialData.margin || 1.6);
@@ -65,12 +65,12 @@ function CuttingForm({
   const handleChange = (
     index: number,
     key: keyof CuttingMaterialData,
-    value: string
+    value: string,
   ) => {
     setRows((prev) =>
       prev.map((row, i) =>
-        i === index ? { ...row, [key]: Number(value) } : row
-      )
+        i === index ? { ...row, [key]: Number(value) } : row,
+      ),
     );
   };
 
