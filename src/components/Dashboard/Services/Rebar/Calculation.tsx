@@ -1,3 +1,4 @@
+// Calculation.tsx
 "use client";
 import {
   useServicesCalculation,
@@ -13,15 +14,14 @@ import {
 } from "@/types/servicesCalculation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CalculationSkeleton } from "../CalculationSkeleton";
 
 export default function Calculation() {
   const { data: servicesCalculation, isLoading } = useServicesCalculation();
   const { mutateAsync: updateServices } = useUpdateServicesCalculation();
 
   if (isLoading) {
-    return (
-      <div className="p-6 text-center text-xl">Loading Calculation Data...</div>
-    );
+    return <CalculationSkeleton title="Rebar Calculation" />;
   }
 
   if (!servicesCalculation?.rebar) {
@@ -46,18 +46,18 @@ function RebarForm({
 }: {
   initialData: ServiceDetail<RebarMaterialData>;
   onSubmit: (
-    data: ServiceUpdatePayload
+    data: ServiceUpdatePayload,
   ) => Promise<ServicesCalculationData | null>;
 }) {
   const [rows, setRows] = useState<RebarMaterialData[]>(
-    initialData.materialData || []
+    initialData.materialData || [],
   );
 
   const [labour, setLabour] = useState(
     initialData.labour || {
       startingPrice: 10,
       pricePerKg: 0.2,
-    }
+    },
   );
 
   const [margin, setMargin] = useState(initialData.margin || 1.6);
@@ -65,8 +65,8 @@ function RebarForm({
   const handleChange = (index: number, value: string) => {
     setRows((prev) =>
       prev.map((row, i) =>
-        i === index ? { ...row, price: Number(value) } : row
-      )
+        i === index ? { ...row, price: Number(value) } : row,
+      ),
     );
   };
 

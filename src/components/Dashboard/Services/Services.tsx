@@ -16,6 +16,7 @@ import { Ruler, CheckCircle2, ArrowRight, Pencil, Layers } from "lucide-react";
 import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRebarTemplates } from "@/lib/hooks/useRebarServices";
 import { useBendingTemplates } from "@/lib/hooks/useBendingServices";
 import { useCuttingTemplates } from "@/lib/hooks/useCuttingServices";
@@ -217,10 +218,10 @@ export default function Services() {
           className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
         >
           {isRebarLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <span className="text-muted-foreground animate-pulse">
-                Loading templates...
-              </span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {[...Array(4)].map((_, i) => (
+                <ShapeCardSkeleton key={i} />
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -241,10 +242,10 @@ export default function Services() {
           className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500 "
         >
           {isCuttingLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <span className="text-muted-foreground animate-pulse">
-                Loading cutting templates...
-              </span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {[...Array(4)].map((_, i) => (
+                <ShapeCardSkeleton key={i} />
+              ))}
             </div>
           ) : cuttingServices.length === 0 ? (
             <div className="flex justify-center items-center py-20">
@@ -271,10 +272,10 @@ export default function Services() {
           className="space-y-6 mt-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500"
         >
           {isBendingLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <span className="text-muted-foreground animate-pulse">
-                Loading bending templates...
-              </span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {[...Array(4)].map((_, i) => (
+                <ShapeCardSkeleton key={i} />
+              ))}
             </div>
           ) : bendingServices.length === 0 ? (
             <div className="flex justify-center items-center py-20">
@@ -411,6 +412,62 @@ function ShapeCard({
           <Pencil className="h-4 w-4" />
           Edit Service Details
         </button>
+      </div>
+    </Card>
+  );
+}
+
+function ShapeCardSkeleton() {
+  return (
+    <Card className="overflow-hidden pt-0! pb-0! border-[#7E1800]/20 animate-pulse">
+      <CardHeader className="bg-[#7E1800]/5 border-b border-[#7E1800]/20 pb-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-1/2 bg-[#7E1800]/10" />
+          <Skeleton className="h-4 w-3/4 bg-[#7E1800]/5" />
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-6 space-y-8">
+        <div className="flex justify-center">
+          <Skeleton className="h-68 w-68 rounded-lg bg-[#7E1800]/5" />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-24 bg-[#7E1800]/10" />
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-16 rounded-full bg-[#7E1800]/5" />
+              <Skeleton className="h-6 w-20 rounded-full bg-[#7E1800]/5" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-24 bg-[#7E1800]/10" />
+            <div className="flex gap-1.5">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton
+                  key={i}
+                  className="h-8 w-8 rounded-full bg-[#7E1800]/5"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 pt-2">
+          <Skeleton className="h-4 w-40 bg-[#7E1800]/10" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-[#7E1800]/5 p-4 rounded-lg space-y-2">
+                <Skeleton className="h-3 w-12 bg-[#7E1800]/5" />
+                <Skeleton className="h-6 w-16 bg-[#7E1800]/10" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+
+      <div className="px-6 pb-6 pt-0">
+        <Skeleton className="h-10 w-full rounded-lg bg-[#7E1800]/10" />
       </div>
     </Card>
   );
