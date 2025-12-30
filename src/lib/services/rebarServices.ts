@@ -1,26 +1,32 @@
-
-import { RebarServiceResponse, RebarTemplateDetailsResponse } from "@/types/rebar";
+// src/lib/services/rebarServices.ts
+import {
+  RebarServiceResponse,
+  RebarTemplateDetailsResponse,
+} from "@/types/rebar";
 import axiosInstance from "../instance/axios-instance";
 
 class RebarServices {
   private baseUrl = "/rebar/templates";
 
   async getRebarTemplates(signal?: AbortSignal): Promise<RebarServiceResponse> {
-    const response = await axiosInstance.get<RebarServiceResponse>(this.baseUrl, {
-      signal,
-    });
+    const response = await axiosInstance.get<RebarServiceResponse>(
+      this.baseUrl,
+      {
+        signal,
+      },
+    );
     return response.data;
   }
 
   async getRebarTemplateDetails(
     templateId: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<RebarTemplateDetailsResponse> {
     const response = await axiosInstance.get<RebarTemplateDetailsResponse>(
       `${this.baseUrl}/${templateId}`,
       {
         signal,
-      }
+      },
     );
     return response.data;
   }
@@ -28,7 +34,7 @@ class RebarServices {
   async updateRebarImage(
     templateId: string,
     file: File,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<RebarTemplateDetailsResponse> {
     const formData = new FormData();
     formData.append("image", file);
@@ -41,7 +47,7 @@ class RebarServices {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   }
@@ -54,14 +60,14 @@ class RebarServices {
       min: number;
       max: number;
     },
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<RebarTemplateDetailsResponse> {
     const response = await axiosInstance.patch<RebarTemplateDetailsResponse>(
       "/rebar/admin/update-label",
       input,
       {
         signal,
-      }
+      },
     );
     return response.data;
   }
