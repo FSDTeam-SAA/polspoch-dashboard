@@ -121,6 +121,9 @@ export function EditServiceDialog({
               d.minRange === d.maxRange
                 ? `${d.minRange} ${d.unit}`
                 : `${d.minRange} – ${d.maxRange} ${d.unit}`,
+            key: d.key,
+            min: d.minRange,
+            max: d.maxRange,
           })),
         };
       });
