@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import OrderDetailsModal from "./OrderDetailsModal";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -28,8 +31,22 @@ export default function Orders() {
 
   if (isLoading) {
     return (
-      <div className="p-6 text-center text-muted-foreground">
-        Loading orders...
+      <div className="p-6 text-center">
+        {/* Box Container */}
+        <div className="border border-gray-300 p-6 rounded-md shadow-sm">
+          {/* Display Skeleton Loader during loading */}
+          <Skeleton className="w-48 h-8 mb-4" />
+          <Skeleton className="w-64 h-4 mb-8" />
+
+          <Skeleton className="w-full h-12 mb-4" />
+          {/* Orders Table Skeleton */}
+          <Skeleton className="w-full h-10 mb-4" />
+          <Skeleton className="w-full h-10 mb-4" />
+          <Skeleton className="w-full h-10 mb-4" />
+          <Skeleton className="w-full h-10 mb-4" />
+          {/* Pagination Skeleton */}
+          <Skeleton className="w-20 h-8" />
+        </div>
       </div>
     );
   }
@@ -73,9 +90,9 @@ export default function Orders() {
                 <th className="h-12 px-4 text-right text-muted-foreground">
                   Total
                 </th>
-                {/* <th className="h-12 px-4 text-center text-muted-foreground">
-                  Status
-                </th> */}
+                <th className="h-12 px-4 text-center text-muted-foreground">
+                  Payment Status
+                </th>
                 <th className="h-12 px-4 text-center text-muted-foreground">
                   Action
                 </th>
@@ -84,6 +101,7 @@ export default function Orders() {
 
             <tbody>
               {currentOrders.map((order) => {
+                const { status, paymentStatus } = order;
                 let displayTitle = "Unknown Item";
                 const cartItems = order.cartItems || [];
 
@@ -144,36 +162,22 @@ export default function Orders() {
                     </td>
 
                     {/* Status */}
-                    {/* <td className="p-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge
-                          className={cn(
-                            "capitalize",
-                            status === "completed" &&
-                              "bg-green-100 text-green-700",
-                            status === "pending" &&
-                              "bg-yellow-100 text-yellow-700",
-                            status === "processing" &&
-                              "bg-blue-100 text-blue-700",
-                            status === "cancelled" && "bg-red-100 text-red-700"
-                          )}
-                        >
-                          {status}
-                        </Badge>
-                        <Badge
-                          variant={
-                            paymentStatus === "paid" ? "default" : "destructive"
-                          }
-                          className={cn(
-                            "text-[10px] px-1.5 py-0 h-4 capitalize",
-                            paymentStatus === "paid" &&
-                              "bg-green-500 hover:bg-green-600"
-                          )}
-                        >
-                          {paymentStatus}
-                        </Badge>
-                      </div>
-                    </td> */}
+                    <td className="p-4 text-center">
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "capitalize shadow-none border-none",
+                          paymentStatus === "paid" &&
+                            "bg-green-100 text-green-700 hover:bg-green-100",
+                          paymentStatus === "unpaid" &&
+                            "bg-red-100 text-red-700 hover:bg-red-100",
+                          paymentStatus === "failed" &&
+                            "bg-red-100 text-red-700 hover:bg-red-100",
+                        )}
+                      >
+                        {paymentStatus}
+                      </Badge>
+                    </td>
 
                     {/* Action */}
                     <td className="p-4 text-center">
