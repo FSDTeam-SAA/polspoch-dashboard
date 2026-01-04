@@ -23,6 +23,9 @@ import { useCuttingTemplates } from "@/lib/hooks/useCuttingServices";
 import { RebarTemplate } from "@/types/rebar";
 import { BendingTemplate } from "@/types/bending";
 import { CuttingTemplate } from "@/types/cutting";
+import { CreateRebarTemplateDialog } from "./Rebar/CreateRebarTemplateDialog";
+import { CreateBendingTemplateDialog } from "./Bending/CreateBendingTemplateDialog";
+import { CreateCuttingTemplateDialog } from "./Cutting/CreateCuttingTemplateDialog";
 
 // --- Demo Data ---
 export interface ShapeDimension {
@@ -204,12 +207,17 @@ export default function Services() {
               Bending
             </TabsTrigger>
           </TabsList>
-          <Link href={`/services/${activeTab}/calculation`}>
-            <button className="bg-[#7E1800] cursor-pointer text-primary-foreground px-4 py-2 rounded-md hover:bg-[#7E1800]/90 transition-colors font-medium">
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
-              Calculation
-            </button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href={`/services/${activeTab}/calculation`}>
+              <button className="bg-[#7E1800] cursor-pointer text-primary-foreground px-4 py-2 rounded-md hover:bg-[#7E1800]/90 transition-colors font-medium">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
+                Calculation
+              </button>
+            </Link>
+            {activeTab === "rebar" && <CreateRebarTemplateDialog />}
+            {activeTab === "bending" && <CreateBendingTemplateDialog />}
+            {activeTab === "cutting" && <CreateCuttingTemplateDialog />}
+          </div>
         </div>
 
         {/* Rebar Tab Content */}

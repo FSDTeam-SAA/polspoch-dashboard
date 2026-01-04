@@ -1,3 +1,4 @@
+import { CuttingDimensionInput } from "@/types/cutting";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { cuttingServices } from "../services/cuttingServices";
 
@@ -33,6 +34,25 @@ export function useUpdateCuttingData() {
       min: number;
       max: number;
     }) => cuttingServices.updateCuttingData(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
+    },
+  });
+}
+
+// Create new cutting template
+export function useCreateCuttingTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      templateId: string;
+      shapeName: string;
+      cuts: number;
+      thickness: number[];
+      materials: string[];
+      dimensions: CuttingDimensionInput[];
+      image: FileList;
+    }) => cuttingServices.createCuttingTemplate(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
     },
