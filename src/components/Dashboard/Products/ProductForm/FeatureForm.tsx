@@ -16,6 +16,14 @@ import { FieldErrors } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+// New interface added as per instruction
+interface NumberFieldProps {
+  label: string;
+  name: string; // Using string to allow dynamic paths like `features.${index}.size1`
+  control: Control<ProductFormValues>;
+  error?: string;
+}
+
 interface FeatureFormProps {
   control: Control<ProductFormValues>;
   errors: FieldErrors<ProductFormValues>;
@@ -371,7 +379,7 @@ function UnitSizesField({
                 `features.${nestIndex}.unitSizes.${k}` as const,
                 {
                   valueAsNumber: true,
-                }
+                },
               )}
               placeholder="Size"
               className="bg-background"
