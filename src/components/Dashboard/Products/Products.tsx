@@ -2,28 +2,29 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import Link from "next/link";
-import { useProducts } from "@/lib/hooks/useProduct";
-import { Product } from "@/lib/types/product";
 import {
   Plus,
   Search,
-  MoreHorizontal,
   Package,
   Eye,
   Edit,
+  Trash2,
   Loader2,
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useProducts, useDeleteProduct } from "@/lib/hooks/useProduct";
+import { Product } from "@/lib/types/product";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -32,14 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   Table,
   TableBody,
@@ -52,16 +46,32 @@ import {
 export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { data: products, isLoading, error } = useProducts();
+  const deleteMutation = useDeleteProduct();
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
 
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (productToDelete) {
+      await deleteMutation.mutateAsync(productToDelete._id);
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
   const filteredProducts = products?.filter((product) =>
-    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (isLoading) {
@@ -92,7 +102,7 @@ export default function Products() {
           </p>
         </div>
         <Link href="/products/add-product">
-          <Button className="shadow-sm cursor-pointer">
+          <Button className="shadow-sm cursor-pointer bg-[#7E1800] hover:bg-[#7E1800]">
             <Plus className="mr-2 h-4 w-4" />
             Add Product
           </Button>
@@ -166,7 +176,11 @@ export default function Products() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{product.family}</TableCell>
+                      <TableCell>
+                        {typeof product.family === "object"
+                          ? product.family.familyName
+                          : product.family}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="font-normal">
                           {product.features.length} variant
@@ -178,11 +192,11 @@ export default function Products() {
                           {product.features.length > 0 ? (
                             <>
                               {Math.min(
-                                ...product.features.map((f) => f.minRange)
+                                ...product.features.map((f) => f.minRange),
                               )}
                               -
                               {Math.max(
-                                ...product.features.map((f) => f.maxRange)
+                                ...product.features.map((f) => f.maxRange),
                               )}
                             </>
                           ) : (
@@ -196,12 +210,14 @@ export default function Products() {
                       <TableCell>
                         <Badge
                           variant={
-                            product.availabilityNote === "In stock"
+                            product.availabilityNote?.toLowerCase() ===
+                            "in stock"
                               ? "default"
                               : "secondary"
                           }
                           className={
-                            product.availabilityNote === "In stock"
+                            product.availabilityNote?.toLowerCase() ===
+                            "in stock"
                               ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200"
                               : "bg-yellow-500/15 text-yellow-700 hover:bg-yellow-500/25 border-yellow-200"
                           }
@@ -210,34 +226,36 @@ export default function Products() {
                         </Badge>
                       </TableCell>
                       <TableCell className="">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
+                            onClick={() => handleViewProduct(product)}
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Link href={`/products/edit/${product._id}`}>
                             <Button
                               variant="ghost"
-                              className="h-8 w-8 p-0 group-hover:opacity-100 bg-red-600/15 cursor-pointer hover:bg-red-600/50 hover:text-white transition-opacity"
+                              size="icon"
+                              className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 cursor-pointer"
+                              title="Edit Product"
                             >
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onClick={() => handleViewProduct(product)}
-                              className="cursor-pointer hover:bg-red-600/50 hover:text-white"
-                            >
-                              <Eye className="mr-2 h-4 w-4 " />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <Link href={`/products/edit/${product._id}`}>
-                              <DropdownMenuItem className="cursor-pointer hover:bg-red-600/50 hover:text-white">
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Product
-                              </DropdownMenuItem>
-                            </Link>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                            onClick={() => handleDeleteClick(product)}
+                            title="Delete Product"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -300,7 +318,11 @@ export default function Products() {
                     <p className="text-sm font-medium text-muted-foreground">
                       Family
                     </p>
-                    <p className="font-semibold">{selectedProduct.family}</p>
+                    <p className="font-semibold">
+                      {typeof selectedProduct.family === "object"
+                        ? selectedProduct.family.familyName
+                        : selectedProduct.family}
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-muted-foreground">
@@ -311,11 +333,11 @@ export default function Products() {
                       selectedProduct.features.length > 0 ? (
                         <>
                           {Math.min(
-                            ...selectedProduct.features.map((f) => f.minRange)
+                            ...selectedProduct.features.map((f) => f.minRange),
                           )}
                           -
                           {Math.max(
-                            ...selectedProduct.features.map((f) => f.maxRange)
+                            ...selectedProduct.features.map((f) => f.maxRange),
                           )}
                         </>
                       ) : (
@@ -341,7 +363,8 @@ export default function Products() {
                     </p>
                     <Badge
                       variant={
-                        selectedProduct.availabilityNote === "In stock"
+                        selectedProduct.availabilityNote?.toLowerCase() ===
+                        "in stock"
                           ? "default"
                           : "secondary"
                       }
@@ -405,6 +428,51 @@ export default function Products() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Confirm Deletion
+            </DialogTitle>
+            <DialogDescription className="py-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {productToDelete?.productName}
+              </span>
+              ? This action cannot be undone and will permanently remove the
+              product from your catalog.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteMutation.isPending}
+              className="cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="cursor-pointer"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Product"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

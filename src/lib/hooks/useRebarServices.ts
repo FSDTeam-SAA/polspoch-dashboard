@@ -1,6 +1,8 @@
 // users/lib/hooks/useRebarServices.ts
 import { useQuery } from "@tanstack/react-query";
 import { rebarServices } from "../services/rebarServices";
+import { RebarTemplateDetailsResponse } from "@/types/rebar";
+import { AxiosError } from "axios";
 
 // Hook to get all rebar templates
 export function useRebarTemplates() {
@@ -62,6 +64,22 @@ export function useUpdateRebarLabel() {
       queryClient.invalidateQueries({
         queryKey: ["rebarTemplateDetails", variables.templateId],
       });
+    },
+  });
+}
+
+// create rebar template
+export function useCreateRebarTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    RebarTemplateDetailsResponse,
+    AxiosError<{ message: string }>,
+    FormData
+  >({
+    mutationFn: (formData: FormData) =>
+      rebarServices.createRebarTemplate(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rebarTemplates"] });
     },
   });
 }

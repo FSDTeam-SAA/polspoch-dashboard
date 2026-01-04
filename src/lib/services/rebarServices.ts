@@ -71,6 +71,25 @@ class RebarServices {
     );
     return response.data;
   }
+
+  // create rebar template
+  // create rebar template
+  async createRebarTemplate(
+    formData: FormData,
+    signal?: AbortSignal,
+  ): Promise<RebarTemplateDetailsResponse> {
+    const response = await axiosInstance.post<RebarTemplateDetailsResponse>(
+      "/rebar/create",
+      formData,
+      {
+        signal,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  }
 }
 
 export const rebarServices = new RebarServices();

@@ -1,3 +1,4 @@
+import { BendingDimensionInput } from "@/types/bending";
 import { useQuery } from "@tanstack/react-query";
 import { bendingServices } from "../services/bendingServices";
 
@@ -35,6 +36,26 @@ export function useUpdateBendingDimension() {
       min: number;
       max: number;
     }) => bendingServices.updateBendingDimension(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bendingTemplates"] });
+    },
+  });
+}
+
+// Create new bending template
+// Create new bending template
+export function useCreateBendingTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      templateId: string;
+      shapeName: string;
+      cuts: number;
+      thickness: number[];
+      materials: string[];
+      dimensions: BendingDimensionInput[];
+      image: FileList;
+    }) => bendingServices.createBendingTemplate(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bendingTemplates"] });
     },

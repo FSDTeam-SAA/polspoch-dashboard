@@ -16,7 +16,7 @@ class ProductService {
    */
   async getAllProducts(): Promise<ProductsResponse> {
     const response = await axiosInstance.get<ProductsResponse>(
-      `${this.baseUrl}`
+      `${this.baseUrl}`,
     );
     return response.data;
   }
@@ -25,7 +25,7 @@ class ProductService {
    * Get single product by ID
    */
   async getProductById(
-    id: string
+    id: string,
   ): Promise<{ success: boolean; data: Product }> {
     const response = await axiosInstance.get<{
       success: boolean;
@@ -38,7 +38,7 @@ class ProductService {
    * Create new product
    */
   async createProduct(
-    formData: FormData
+    formData: FormData,
   ): Promise<{ success: boolean; data: Product }> {
     const response = await axiosInstance.post<{
       success: boolean;
@@ -56,7 +56,7 @@ class ProductService {
    */
   async updateProduct(
     id: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<{ success: boolean; data: Product }> {
     const response = await axiosInstance.put<{
       success: boolean;
@@ -66,6 +66,16 @@ class ProductService {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+  }
+
+  /**
+   * Delete existing product
+   */
+  async deleteProduct(id: string): Promise<{ success: boolean }> {
+    const response = await axiosInstance.delete<{ success: boolean }>(
+      `${this.baseUrl}/${id}`,
+    );
     return response.data;
   }
 
