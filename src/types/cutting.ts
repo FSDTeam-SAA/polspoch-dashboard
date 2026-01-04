@@ -7,6 +7,14 @@ export interface CuttingDimension {
   unit: string;
 }
 
+export interface CuttingDimensionInput {
+  key: string;
+  label: string;
+  minRange: number;
+  maxRange: number;
+  unit: string;
+}
+
 export interface CuttingTemplate {
   _id: string;
   templateId: string;

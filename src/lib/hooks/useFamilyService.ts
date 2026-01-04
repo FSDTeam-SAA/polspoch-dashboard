@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { familyServices } from "../services/familyService";
 
+// Get families
 export function useFamilies() {
   return useQuery({
     queryKey: ["families"],
@@ -12,6 +13,7 @@ export function useFamilies() {
   });
 }
 
+// Create family
 export function useCreateFamily() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -26,6 +28,7 @@ export function useCreateFamily() {
   });
 }
 
+// Update family
 export function useUpdateFamily() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -41,6 +44,7 @@ export function useUpdateFamily() {
   });
 }
 
+// Delete family
 export function useDeleteFamily() {
   const queryClient = useQueryClient();
   return useMutation({
