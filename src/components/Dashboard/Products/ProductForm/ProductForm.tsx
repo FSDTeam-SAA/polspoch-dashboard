@@ -24,18 +24,29 @@ import {
 import { useProductForm } from "@/lib/hooks/useProductForm";
 import { ProductFormValues } from "@/lib/schemas/productSchema";
 import { useImageUpload } from "@/lib/hooks/useImageUpload";
+import { ProductImage, Feature } from "@/lib/types/product";
 import FeatureForm from "./FeatureForm";
 import { Separator } from "@/components/ui/separator";
+import { useFamilies } from "@/lib/hooks/useFamilyService";
 
 interface ProductFormProps {
   mode: "add" | "edit";
   productId?: string;
 }
 
+interface Family {
+  _id: string;
+  familyName: string;
+}
+
+const EMPTY_IMAGES: ProductImage[] = [];
+
 export default function ProductForm({ mode, productId }: ProductFormProps) {
   const router = useRouter();
   const { form, handleSubmit, isLoading, isLoadingProduct, productData } =
     useProductForm({ mode, productId });
+
+  const { data: families } = useFamilies();
 
   const {
     imageFiles,
@@ -45,7 +56,7 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
     removeImageFile,
     removeExistingImage,
     getAllImageData,
-  } = useImageUpload(productData?.productImage || []);
+  } = useImageUpload(productData?.productImage || EMPTY_IMAGES);
 
   const {
     register,
@@ -61,20 +72,23 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
     if (productData && mode === "edit") {
       reset({
         productName: productData.productName,
-        family: productData.family,
+        family:
+          typeof productData.family === "object"
+            ? productData.family._id
+            : productData.family,
         availabilityNote: productData.availabilityNote || "",
         unitSizeCustomizationNote: productData.unitSizeCustomizationNote || "",
         measureUnit: productData.measureUnit,
-        features: productData.features.map((f) => ({
+        features: productData.features.map((f: Feature) => ({
           reference: f.reference,
           size1: f.size1,
           size2: f.size2,
           thickness: f.thickness,
           finishQuality: f.finishQuality,
-          minRange: f.minRange,
-          maxRange: f.maxRange,
           kgsPerUnit: f.kgsPerUnit,
           miterPerUnitPrice: f.miterPerUnitPrice,
+          minRange: f.minRange,
+          maxRange: f.maxRange,
           unitSizes: f.unitSizes,
         })),
       });
@@ -190,11 +204,20 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
                   <Label htmlFor="family">
                     Family <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="family"
-                    {...register("family")}
-                    placeholder="e.g., Tiles, Stone"
-                  />
+                  <div className="relative">
+                    <select
+                      id="family"
+                      {...register("family")}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select a family</option>
+                      {families?.map((family: Family) => (
+                        <option key={family._id} value={family._id}>
+                          {family.familyName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   {errors.family && (
                     <p className="text-xs text-destructive font-medium">
                       {errors.family.message}

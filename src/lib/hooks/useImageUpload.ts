@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { ImageFile, ProductImage } from "../types/product";
-import { productService } from "../services/productService";
 import { toast } from "sonner";
 
 interface UseImageUploadReturn {
@@ -17,12 +16,21 @@ interface UseImageUploadReturn {
 }
 
 export function useImageUpload(
-  initialImages: ProductImage[] = []
+  initialImages: ProductImage[] = [],
 ): UseImageUploadReturn {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const [existingImages, setExistingImages] =
     useState<ProductImage[]>(initialImages);
+  const [prevInitialImages, setPrevInitialImages] = useState(initialImages);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync existing images when initialImages changes (e.g., after product data fetch)
+  if (initialImages !== prevInitialImages) {
+    setPrevInitialImages(initialImages);
+    if (initialImages && initialImages.length > 0) {
+      setExistingImages(initialImages);
+    }
+  }
 
   const addImages = useCallback((files: File[]) => {
     const validFiles = files.filter((file) => {
@@ -58,7 +66,7 @@ export function useImageUpload(
     });
   }, []);
 
-  const removeExistingImage = useCallback(async (publicKey: string) => {
+  const removeExistingImage = useCallback(async (_publicKey: string) => {
     // try {
     //   setIsUploading(true);
     //   await productService.deleteImage(publicKey);

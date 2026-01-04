@@ -22,9 +22,20 @@ export interface Feature {
   _id?: string;
 }
 
+export interface Family {
+  _id: string;
+  familyName: string;
+  img?: {
+    url: string;
+    publickey: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Product {
   _id: string;
-  family: string;
+  family: Family | string;
   productName: string;
   availabilityNote?: string;
   unitSizeCustomizationNote?: string;
