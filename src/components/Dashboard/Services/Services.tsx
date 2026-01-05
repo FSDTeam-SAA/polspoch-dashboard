@@ -12,14 +12,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Ruler, CheckCircle2, ArrowRight, Pencil, Layers } from "lucide-react";
+import {
+  Ruler,
+  CheckCircle2,
+  ArrowRight,
+  Pencil,
+  Layers,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { EditServiceDialog } from "./EditServiceDialog";
 import Image from "next/image";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRebarTemplates } from "@/lib/hooks/useRebarServices";
-import { useBendingTemplates } from "@/lib/hooks/useBendingServices";
-import { useCuttingTemplates } from "@/lib/hooks/useCuttingServices";
+import {
+  useRebarTemplates,
+  useDeleteRebarTemplate,
+} from "@/lib/hooks/useRebarServices";
+import {
+  useBendingTemplates,
+  useDeleteBendingTemplate,
+} from "@/lib/hooks/useBendingServices";
+import {
+  useCuttingTemplates,
+  useDeleteCuttingTemplate,
+} from "@/lib/hooks/useCuttingServices";
 import { RebarTemplate } from "@/types/rebar";
 import { BendingTemplate } from "@/types/bending";
 import { CuttingTemplate } from "@/types/cutting";
@@ -51,6 +68,7 @@ export interface ServiceItem {
   specs: ShapeSpec;
   dimensions: ShapeDimension[];
   image?: string;
+  cuts?: number;
 }
 
 export default function Services() {
@@ -106,9 +124,10 @@ export default function Services() {
       title: t.shapeName,
       description: "Cutting template specification",
       image: t.imageUrl,
+      cuts: t.cuts,
       specs: {
         material: t.materials,
-        thickness: t.thicknesses.map(String),
+        thickness: t.thickness.map(String),
       },
       dimensions: t.dimensions.map((d) => ({
         label: d.label,
@@ -138,9 +157,10 @@ export default function Services() {
         title: t.shapeName,
         description: "Bending template specification",
         image: t.imageUrl,
+        cuts: t.cuts,
         specs: {
           material: t.materials,
-          thickness: t.thicknesses.map(String),
+          thickness: t.thickness.map(String),
         },
         dimensions: t.dimensions.map((d) => ({
           label: d.label,
@@ -162,9 +182,43 @@ export default function Services() {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const deleteRebarTemplateMutation = useDeleteRebarTemplate();
+  const deleteBendingTemplateMutation = useDeleteBendingTemplate();
+  const deleteCuttingTemplateMutation = useDeleteCuttingTemplate();
+
   const handleEditClick = (service: ServiceItem) => {
     setEditingService(service);
     setIsDialogOpen(true);
+  };
+
+  const handleDeleteRebar = async (templateId: string) => {
+    try {
+      await deleteRebarTemplateMutation.mutateAsync(templateId);
+      toast.success("Rebar template deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete rebar template");
+    }
+  };
+
+  const handleDeleteBending = async (templateId: string) => {
+    try {
+      await deleteBendingTemplateMutation.mutateAsync(templateId);
+      toast.success("Bending template deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete bending template");
+    }
+  };
+
+  const handleDeleteCutting = async (templateId: string) => {
+    try {
+      await deleteCuttingTemplateMutation.mutateAsync(templateId);
+      toast.success("Cutting template deleted successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete cutting template");
+    }
   };
 
   return (
@@ -238,6 +292,9 @@ export default function Services() {
                   key={item.shepName}
                   item={item}
                   onEdit={() => handleEditClick(item)}
+                  onDelete={() =>
+                    item.templateId && handleDeleteRebar(item.templateId)
+                  }
                 />
               ))}
             </div>
@@ -268,6 +325,9 @@ export default function Services() {
                   key={item.shepName}
                   item={item}
                   onEdit={() => handleEditClick(item)}
+                  onDelete={() =>
+                    item.templateId && handleDeleteCutting(item.templateId)
+                  }
                 />
               ))}
             </div>
@@ -298,6 +358,9 @@ export default function Services() {
                   key={item.shepName}
                   item={item}
                   onEdit={() => handleEditClick(item)}
+                  onDelete={() =>
+                    item.templateId && handleDeleteBending(item.templateId)
+                  }
                 />
               ))}
             </div>
@@ -312,9 +375,11 @@ export default function Services() {
 function ShapeCard({
   item,
   onEdit,
+  onDelete,
 }: {
   item: ServiceItem;
   onEdit: () => void;
+  onDelete?: () => void;
 }) {
   return (
     <Card className="overflow-hidden pt-0! pb-0! transition-all duration-300 hover:shadow-lg border-[#7E1800]/20 dark:border-[#7E1800]/40 group">
@@ -411,15 +476,27 @@ function ShapeCard({
         </div>
       </CardContent>
 
-      {/* Edit Button Overlay or Footer */}
-      <div className="px-6 pb-6 pt-0">
+      {/* Edit & Delete Button Overlay or Footer */}
+      <div className="px-6 pb-6 pt-0 flex gap-2">
         <button
           onClick={onEdit}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors border border-[#7E1800] text-[#7E1800] hover:bg-[#7E1800] hover:text-white cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors border border-[#7E1800] text-[#7E1800] hover:bg-[#7E1800] hover:text-white cursor-pointer"
         >
           <Pencil className="h-4 w-4" />
           Edit Service Details
         </button>
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="flex-none flex items-center justify-center p-2 rounded-lg text-sm font-medium transition-colors border border-destructive text-destructive hover:bg-destructive hover:text-white cursor-pointer"
+            title="Delete Template"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </Card>
   );

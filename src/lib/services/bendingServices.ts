@@ -18,40 +18,39 @@ class BendingServices {
     return res.data;
   }
 
-  async updateBendingImage(
-    templateId: string,
-    file: File,
+  async updateBendingTemplate(
+    input: {
+      templateId: string;
+      shapeName: string;
+      cuts: number;
+      thickness: number[];
+      materials: string[];
+      dimensions: BendingDimensionInput[];
+      image?: File;
+    },
     signal?: AbortSignal,
   ): Promise<SingleBendingServiceResponse> {
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("templateId", input.templateId);
+    formData.append("shapeName", input.shapeName);
+    formData.append("cuts", String(input.cuts));
+
+    // Append array fields as stringified JSON
+    formData.append("thickness", JSON.stringify(input.thickness));
+    formData.append("materials", JSON.stringify(input.materials));
+    formData.append("dimensions", JSON.stringify(input.dimensions));
+
+    if (input.image) {
+      formData.append("image", input.image);
+    }
 
     const res = await axiosInstance.patch<SingleBendingServiceResponse>(
-      `${this.baseUrl}/admin/update-image/${templateId}`,
+      `${this.baseUrl}/admin/update/${input.templateId}`,
       formData,
       {
         signal,
         headers: { "Content-Type": "multipart/form-data" },
       },
-    );
-
-    return res.data;
-  }
-
-  async updateBendingDimension(
-    input: {
-      templateId: string;
-      key: string;
-      newLabel: string;
-      min: number;
-      max: number;
-    },
-    signal?: AbortSignal,
-  ): Promise<SingleBendingServiceResponse> {
-    const res = await axiosInstance.patch<SingleBendingServiceResponse>(
-      `${this.baseUrl}/update-template`,
-      input,
-      { signal },
     );
 
     return res.data;
@@ -85,7 +84,7 @@ class BendingServices {
     }
 
     const res = await axiosInstance.post<SingleBendingServiceResponse>(
-      `${this.baseUrl}/admin/create-template`,
+      `${this.baseUrl}/admin/create`,
       formData,
       {
         signal,
@@ -94,6 +93,16 @@ class BendingServices {
     );
 
     return res.data;
+  }
+
+  // delete bending template
+  async deleteBendingTemplate(
+    templateId: string,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    await axiosInstance.delete(`/bending/admin/delete/${templateId}`, {
+      signal,
+    });
   }
 }
 

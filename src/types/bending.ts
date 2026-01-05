@@ -22,7 +22,7 @@ export interface BendingTemplate {
   shapeName: string;
   imageUrl: string;
   cuts: number;
-  thicknesses: number[];
+  thickness: number[];
   materials: string[];
   dimensions: BendingDimension[];
   updatedAt: string;

@@ -35,30 +35,22 @@ export function useRebarTemplateDetails(templateId: string | null) {
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export function useUpdateRebarImage() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ templateId, file }: { templateId: string; file: File }) =>
-      rebarServices.updateRebarImage(templateId, file),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["rebarTemplates"] });
-      queryClient.invalidateQueries({
-        queryKey: ["rebarTemplateDetails", variables.templateId],
-      });
-    },
-  });
-}
-
-export function useUpdateRebarLabel() {
+export function useUpdateRebarTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: {
       templateId: string;
-      key: string;
-      newLabel: string;
-      min: number;
-      max: number;
-    }) => rebarServices.updateRebarLabel(input),
+      shapeName: string;
+      dimensions: {
+        key: string;
+        label: string;
+        minRange: number;
+        maxRange: number;
+        unit: string;
+      }[];
+      availableDiameters: number[];
+      image?: File;
+    }) => rebarServices.updateRebarTemplate(input),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["rebarTemplates"] });
       queryClient.invalidateQueries({
@@ -78,6 +70,18 @@ export function useCreateRebarTemplate() {
   >({
     mutationFn: (formData: FormData) =>
       rebarServices.createRebarTemplate(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rebarTemplates"] });
+    },
+  });
+}
+
+// delete rebar template
+export function useDeleteRebarTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: string) =>
+      rebarServices.deleteRebarTemplate(templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rebarTemplates"] });
     },
