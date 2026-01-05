@@ -17,23 +17,48 @@ import { format } from "date-fns";
 
 interface OrderDetailsModalProps {
   order: Order;
+  filterType?: "services" | "products";
 }
 
-export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
-  const cartItems = order.cartItems || [];
+export default function OrderDetailsModal({
+  order,
+  filterType,
+}: OrderDetailsModalProps) {
+  const allCartItems = order.cartItems || [];
+
+  // Filter items based on the tab type
+  const cartItems = filterType
+    ? allCartItems.filter((item) => {
+        const actualItem = item.cartId || item;
+        const itemType = actualItem.type;
+        if (filterType === "services") return itemType === "service";
+        if (filterType === "products") return itemType === "product";
+        return true;
+      })
+    : allCartItems;
+
   const cartItemCount = cartItems.length;
 
-  // console.log("this is my cartItems", cartItems);
+  // Calculate total for filtered items
+  const filteredTotal = cartItems.reduce((sum, item) => {
+    const actualItem = item.cartId || item;
+    return sum + (actualItem.totalAmount || 0);
+  }, 0);
 
-  // Gather all images from cart items
+  // Gather all images from filtered cart items
   const itemImages: string[] = [];
   cartItems.forEach((item) => {
-    if (item.product?.productImage) {
-      item.product.productImage.forEach((img: { url: string }) =>
+    const actualItem = item.cartId || item;
+    if (actualItem.product?.productId?.productImage) {
+      actualItem.product.productId.productImage.forEach(
+        (img: { url: string }) => itemImages.push(img.url),
+      );
+    } else if (actualItem.product?.productImage) {
+      actualItem.product.productImage.forEach((img: { url: string }) =>
         itemImages.push(img.url),
       );
-    } else if (item.service?.image) {
-      itemImages.push(item.service.image);
+    } else if (actualItem.service?.image) {
+      itemImages.push(actualItem.service.image);
     }
   });
 
@@ -57,7 +82,8 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <ChevronLeft className="h-5 w-5 cursor-pointer" />
-                Order Details
+                {filterType === "services" ? "Service" : "Product"} Order
+                Details
                 <span className="text-sm font-mono text-muted-foreground ml-2">
                   #{order._id.slice(-6).toUpperCase()}
                 </span>
@@ -75,7 +101,7 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                       height={600}
                       width={600}
                       src={activeImage}
-                      alt="Product Preview"
+                      alt="Preview"
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -171,7 +197,8 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
               {/* Right Column: Order Items */}
               <div className="space-y-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-4">
-                  <Package className="h-4 w-4" /> Order Items ({cartItemCount})
+                  <Package className="h-4 w-4" /> {filterType || "Order"} Items
+                  ({cartItemCount})
                 </h3>
 
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
@@ -179,7 +206,8 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                     const actualItem = item.cartId || item;
                     const isProduct = actualItem.type === "product";
                     const itemName = isProduct
-                      ? actualItem.product?.productName
+                      ? actualItem.product?.productId?.productName ||
+                        actualItem.product?.productName
                       : actualItem.service?.templateName;
 
                     const itemData: Record<
@@ -187,14 +215,21 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                       string | number | undefined
                     > = isProduct
                       ? {
-                          Family: actualItem.product?.family || "N/A",
+                          Family:
+                            actualItem.product?.productId?.family ||
+                            actualItem.product?.family ||
+                            "N/A",
                           "Product Name": itemName || "N/A",
                           "Unit Size": actualItem.unitSize || "N/A",
                           "Customization Note":
+                            actualItem.product?.productId
+                              ?.unitSizeCustomizationNote ||
                             actualItem.product?.unitSizeCustomizationNote ||
                             "N/A",
                           "Measure Unit":
-                            actualItem.product?.measureUnit || "N/A",
+                            actualItem.product?.productId?.measureUnit ||
+                            actualItem.product?.measureUnit ||
+                            "N/A",
                           Reference:
                             actualItem.selectedFeature?.reference || "N/A",
                           "Size 1": actualItem.selectedFeature?.size1 || "N/A",
@@ -211,7 +246,7 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                           "Miter Per Unit Price":
                             actualItem.selectedFeature?.miterPerUnitPrice ||
                             "N/A",
-                          Type: actualItem.type || "N/A",
+                          Range: actualItem.product?.range || "N/A",
                           Quantity: actualItem.quantity || "N/A",
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
@@ -222,16 +257,19 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                           "Service Type":
                             actualItem.service?.serviceType || "N/A",
                           Diameter: actualItem.service?.diameter || "N/A",
+                          Material: actualItem.service?.material || "N/A",
                           "Price per Unit": actualItem.service?.price
                             ? `€${actualItem.service.price}`
                             : "N/A",
                           "Dimension Sizes": actualItem.service?.sizes
                             ? Object.entries(actualItem.service.sizes)
-                                .filter(([_, v]) => v !== 0 && v !== null)
+                                .filter(
+                                  ([, v]) =>
+                                    v !== 0 && v !== undefined && v !== null,
+                                )
                                 .map(([k, v]) => `${k}: ${v}`)
                                 .join(", ")
                             : "N/A",
-                          Type: actualItem.type || "N/A",
                           Quantity: actualItem.quantity || "N/A",
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
@@ -244,7 +282,7 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
                         className="rounded-lg border bg-muted/30 overflow-hidden p-3"
                       >
                         <div className="mb-2 font-bold text-sm flex justify-between items-center">
-                          <span>{itemName || "Product/Service"}</span>
+                          <span>{itemName || "Item"}</span>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
                             {actualItem.type}
                           </span>
@@ -277,10 +315,10 @@ export default function OrderDetailsModal({ order }: OrderDetailsModalProps) {
           <div className="shrink-0 p-6 border-t bg-muted/10 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-muted-foreground">
-                Order Total:
+                {filterType ? `${filterType.slice(0, -1)}s` : "Order"} Total:
               </span>
               <span className="text-3xl font-bold text-primary">
-                €{order.totalAmount.toLocaleString()}
+                €{filteredTotal.toLocaleString()}
               </span>
             </div>
             <Button
