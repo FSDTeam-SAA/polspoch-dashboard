@@ -40,13 +40,13 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
       features: [
         {
           reference: "",
-          size1: 0,
-          size2: 0,
-          thickness: 0,
+          size1: undefined,
+          size2: undefined,
+          thickness: undefined,
           finishQuality: "",
-          minRange: 0,
-          maxRange: 0,
-          kgsPerUnit: 0,
+          minRange: undefined,
+          maxRange: undefined,
+          kgsPerUnit: undefined,
           miterPerUnitPrice: undefined,
         },
       ],
@@ -112,7 +112,7 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
     if (data.unitSizeCustomizationNote) {
       formData.append(
         "unitSizeCustomizationNote",
-        data.unitSizeCustomizationNote
+        data.unitSizeCustomizationNote,
       );
     }
 

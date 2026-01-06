@@ -22,7 +22,7 @@ export interface CuttingTemplate {
   type: string;
   imageUrl: string;
   cuts: number;
-  thicknesses: number[];
+  thickness: number[];
   materials: string[];
   dimensions: CuttingDimension[];
   isActive: boolean;

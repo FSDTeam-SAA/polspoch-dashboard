@@ -8,14 +8,14 @@ export interface ProductImage {
 
 export interface Feature {
   reference: string;
-  size1: number;
-  size2: number;
-  thickness: number;
+  size1?: number;
+  size2?: number;
+  thickness?: number;
   finishQuality: string;
 
-  minRange: number;
-  maxRange: number;
-  kgsPerUnit: number;
+  minRange?: number;
+  maxRange?: number;
+  kgsPerUnit?: number;
 
   miterPerUnitPrice?: number;
   unitSizes?: number[];

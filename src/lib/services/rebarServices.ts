@@ -31,16 +31,37 @@ class RebarServices {
     return response.data;
   }
 
-  async updateRebarImage(
-    templateId: string,
-    file: File,
+  async updateRebarTemplate(
+    input: {
+      templateId: string;
+      shapeName: string;
+      dimensions: {
+        key: string;
+        label: string;
+        minRange: number;
+        maxRange: number;
+        unit: string;
+      }[];
+      availableDiameters: number[];
+      image?: File;
+    },
     signal?: AbortSignal,
   ): Promise<RebarTemplateDetailsResponse> {
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("templateId", input.templateId);
+    formData.append("shapeName", input.shapeName);
+    formData.append("dimensions", JSON.stringify(input.dimensions));
+    formData.append(
+      "availableDiameters",
+      JSON.stringify(input.availableDiameters),
+    );
+
+    if (input.image) {
+      formData.append("image", input.image);
+    }
 
     const response = await axiosInstance.patch<RebarTemplateDetailsResponse>(
-      `/rebar/admin/update-image/${templateId}`,
+      `/rebar/admin/update-image/${input.templateId}`,
       formData,
       {
         signal,
@@ -52,27 +73,6 @@ class RebarServices {
     return response.data;
   }
 
-  async updateRebarLabel(
-    input: {
-      templateId: string;
-      key: string;
-      newLabel: string;
-      min: number;
-      max: number;
-    },
-    signal?: AbortSignal,
-  ): Promise<RebarTemplateDetailsResponse> {
-    const response = await axiosInstance.patch<RebarTemplateDetailsResponse>(
-      "/rebar/admin/update-label",
-      input,
-      {
-        signal,
-      },
-    );
-    return response.data;
-  }
-
-  // create rebar template
   // create rebar template
   async createRebarTemplate(
     formData: FormData,
@@ -89,6 +89,16 @@ class RebarServices {
       },
     );
     return response.data;
+  }
+
+  // delete rebar template
+  async deleteRebarTemplate(
+    templateId: string,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    await axiosInstance.delete(`/rebar/delete/${templateId}`, {
+      signal,
+    });
   }
 }
 
