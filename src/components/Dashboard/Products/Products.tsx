@@ -192,11 +192,15 @@ export default function Products() {
                           {product.features.length > 0 ? (
                             <>
                               {Math.min(
-                                ...product.features.map((f) => f.minRange),
+                                ...(product.features.map(
+                                  (f) => f.minRange,
+                                ) as number[]),
                               )}
                               -
                               {Math.max(
-                                ...product.features.map((f) => f.maxRange),
+                                ...(product.features.map(
+                                  (f) => f.maxRange,
+                                ) as number[]),
                               )}
                             </>
                           ) : (
@@ -333,11 +337,15 @@ export default function Products() {
                       selectedProduct.features.length > 0 ? (
                         <>
                           {Math.min(
-                            ...selectedProduct.features.map((f) => f.minRange),
+                            ...(selectedProduct.features.map(
+                              (f) => f.minRange,
+                            ) as number[]),
                           )}
                           -
                           {Math.max(
-                            ...selectedProduct.features.map((f) => f.maxRange),
+                            ...(selectedProduct.features.map(
+                              (f) => f.maxRange,
+                            ) as number[]),
                           )}
                         </>
                       ) : (
