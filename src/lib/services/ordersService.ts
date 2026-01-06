@@ -9,7 +9,7 @@ class OrdersService {
    * Fetch current user's profile
    */
   async getOrders(
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<import("@/types/order").Order[]> {
     const response = await axiosInstance.get(`${this.baseUrl}/all-orders`, {
       signal,
@@ -30,6 +30,14 @@ class OrdersService {
     }
 
     return [];
+  }
+
+  // Bulk delete orders
+  async deleteOrders(orderIds: string[]) {
+    const response = await axiosInstance.delete(`${this.baseUrl}/delete`, {
+      data: { orderIds },
+    });
+    return response.data;
   }
 }
 

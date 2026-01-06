@@ -7,7 +7,7 @@ import {
   useWatch,
   UseFormSetValue,
 } from "react-hook-form";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,13 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 // New interface added as per instruction
-interface NumberFieldProps {
-  label: string;
-  name: string; // Using string to allow dynamic paths like `features.${index}.size1`
-  control: Control<ProductFormValues>;
-  error?: string;
-}
-
+// Interface for FeatureFormProps
 interface FeatureFormProps {
   control: Control<ProductFormValues>;
   errors: FieldErrors<ProductFormValues>;
@@ -43,13 +37,13 @@ export default function FeatureForm({
   const addFeature = () => {
     append({
       reference: "",
-      size1: 0,
-      size2: 0,
-      thickness: 0,
+      size1: undefined,
+      size2: undefined,
+      thickness: undefined,
       finishQuality: "",
-      minRange: 0,
-      maxRange: 0,
-      kgsPerUnit: 0,
+      minRange: undefined,
+      maxRange: undefined,
+      kgsPerUnit: undefined,
       unitSizes: [],
       miterPerUnitPrice: undefined,
     });
@@ -165,9 +159,7 @@ export default function FeatureForm({
                 <div className="col-span-full grid grid-cols-3 gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
                   {/* Size 1 */}
                   <div className="space-y-2">
-                    <Label htmlFor={`features.${index}.size1`}>
-                      Size 1 <span className="text-destructive">*</span>
-                    </Label>
+                    <Label htmlFor={`features.${index}.size1`}>Size 1</Label>
                     <Input
                       id={`features.${index}.size1`}
                       type="number"
@@ -185,9 +177,7 @@ export default function FeatureForm({
 
                   {/* Size 2 */}
                   <div className="space-y-2">
-                    <Label htmlFor={`features.${index}.size2`}>
-                      Size 2 <span className="text-destructive">*</span>
-                    </Label>
+                    <Label htmlFor={`features.${index}.size2`}>Size 2</Label>
                     <Input
                       id={`features.${index}.size2`}
                       type="number"
@@ -206,7 +196,7 @@ export default function FeatureForm({
                   {/* Thickness */}
                   <div className="space-y-2">
                     <Label htmlFor={`features.${index}.thickness`}>
-                      Thickness (mm) <span className="text-destructive">*</span>
+                      Thickness (mm)
                     </Label>
                     <Input
                       id={`features.${index}.thickness`}
@@ -228,7 +218,7 @@ export default function FeatureForm({
                 <div className="col-span-full grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
                   <div className="space-y-2">
                     <Label htmlFor={`features.${index}.minRange`}>
-                      Min Range <span className="text-destructive">*</span>
+                      Min Range
                     </Label>
                     <Input
                       id={`features.${index}.minRange`}
@@ -247,7 +237,7 @@ export default function FeatureForm({
 
                   <div className="space-y-2">
                     <Label htmlFor={`features.${index}.maxRange`}>
-                      Max Range <span className="text-destructive">*</span>
+                      Max Range
                     </Label>
                     <Input
                       id={`features.${index}.maxRange`}
@@ -266,8 +256,7 @@ export default function FeatureForm({
 
                   <div className="space-y-2">
                     <Label htmlFor={`features.${index}.kgsPerUnit`}>
-                      Weight (kg/unit){" "}
-                      <span className="text-destructive">*</span>
+                      Weight (kg/unit)
                     </Label>
                     <Input
                       id={`features.${index}.kgsPerUnit`}

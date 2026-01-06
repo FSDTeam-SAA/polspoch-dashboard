@@ -13,27 +13,18 @@ export function useCuttingTemplates() {
   });
 }
 
-export function useUpdateCuttingImage() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ templateId, file }: { templateId: string; file: File }) =>
-      cuttingServices.updateCuttingImage(templateId, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
-    },
-  });
-}
-
-export function useUpdateCuttingData() {
+export function useUpdateCuttingTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: {
       templateId: string;
-      key: string;
-      newLabel: string;
-      min: number;
-      max: number;
-    }) => cuttingServices.updateCuttingData(input),
+      shapeName: string;
+      cuts: number;
+      thickness: number[];
+      materials: string[];
+      dimensions: CuttingDimensionInput[];
+      image?: File;
+    }) => cuttingServices.updateCuttingTemplate(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
     },
@@ -53,6 +44,18 @@ export function useCreateCuttingTemplate() {
       dimensions: CuttingDimensionInput[];
       image: FileList;
     }) => cuttingServices.createCuttingTemplate(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
+    },
+  });
+}
+
+// delete cutting template
+export function useDeleteCuttingTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: string) =>
+      cuttingServices.deleteCuttingTemplate(templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cuttingTemplates"] });
     },

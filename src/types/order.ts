@@ -13,6 +13,7 @@ export interface Service {
   sizes: ServiceSizes;
   price: number;
   image?: string;
+  material?: string;
 }
 
 export interface SelectedFeature {
@@ -35,6 +36,15 @@ export interface ProductImage {
 
 export interface ProductDetails {
   _id: string;
+  productId?: {
+    _id: string;
+    productName: string;
+    family: string;
+    availabilityNote: string;
+    measureUnit: string;
+    unitSizeCustomizationNote: string;
+    productImage: ProductImage[];
+  };
   featuredId: string;
   productName: string;
   family: string;
@@ -42,6 +52,7 @@ export interface ProductDetails {
   measureUnit: string;
   minRange: number | null;
   maxRange: number | null;
+  range?: number;
   unitSizeCustomizationNote: string;
   createdAt: string;
   updatedAt: string;
