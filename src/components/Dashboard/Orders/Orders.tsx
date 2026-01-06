@@ -1,10 +1,9 @@
 "use client";
-
 import React, { useState, useMemo } from "react";
-import { useOrders } from "@/lib/hooks/useOrders";
+import { useOrders, useDeleteOrders } from "@/lib/hooks/useOrders";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, RotateCcw } from "lucide-react";
 import OrderDetailsModal from "./OrderDetailsModal";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +11,27 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Order } from "@/types/order";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ITEMS_PER_PAGE = 8;
 
 export default function Orders() {
   const { data: orders = [], isLoading, error } = useOrders();
+  console.log(orders);
+  const deleteMutation = useDeleteOrders();
   const [activeTab, setActiveTab] = useState("services");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Filter orders based on item types in their cart
   const filteredOrders = useMemo(() => {
@@ -54,7 +67,33 @@ export default function Orders() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    setCurrentPage(1); // Reset page on tab switch
+    setCurrentPage(1);
+    setSelectedOrderIds([]);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.length === currentOrders.length) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(currentOrders.map((o) => o._id));
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(id) ? prev.filter((oid) => oid !== id) : [...prev, id],
+    );
+  };
+
+  const handleDelete = async () => {
+    if (selectedOrderIds.length === 0) return;
+    try {
+      await deleteMutation.mutateAsync(selectedOrderIds);
+      setSelectedOrderIds([]);
+      setIsDeleteDialogOpen(false);
+    } catch {
+      // Error handled in hook toast
+    }
   };
 
   if (isLoading) {
@@ -89,6 +128,47 @@ export default function Orders() {
             Manage and view customer orders
           </p>
         </div>
+        {selectedOrderIds.length > 0 && (
+          <Dialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-2 shadow-sm animate-in fade-in slide-in-from-right-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Selected ({selectedOrderIds.length})
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you absolutely sure?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete{" "}
+                  {selectedOrderIds.length} selected order(s) from the system.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? "Deleting..." : "Confirm Delete"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Tabs
@@ -96,10 +176,25 @@ export default function Orders() {
         onValueChange={handleTabChange}
         className="space-y-6"
       >
-        <TabsList className="grid w-full max-w-[400px] grid-cols-2">
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between">
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="products">Products</TabsTrigger>
+          </TabsList>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedOrderIds([])}
+            className={cn(
+              "text-muted-foreground",
+              selectedOrderIds.length === 0 && "opacity-0 pointer-events-none",
+            )}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Clear Selection
+          </Button>
+        </div>
 
         <TabsContent value={activeTab} className="space-y-6 border-none p-0">
           <div className="rounded-md border bg-card shadow-sm overflow-hidden">
@@ -111,7 +206,16 @@ export default function Orders() {
               ) : (
                 <table className="w-full text-sm text-left">
                   <thead>
-                    <tr className="border-b">
+                    <tr className="border-b bg-muted/30">
+                      {/* <th className="h-12 px-4 w-[50px]">
+                        <Checkbox
+                          checked={
+                            selectedOrderIds.length === currentOrders.length &&
+                            currentOrders.length > 0
+                          }
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </th> */}
                       <th className="h-12 px-4 text-muted-foreground whitespace-nowrap">
                         Order ID
                       </th>
@@ -141,6 +245,7 @@ export default function Orders() {
                   <tbody>
                     {currentOrders.map((order) => {
                       const { paymentStatus } = order;
+                      const isSelected = selectedOrderIds.includes(order._id);
                       let displayTitle = "Unknown Item";
                       const cartItems = order.cartItems || [];
 
@@ -176,8 +281,21 @@ export default function Orders() {
                       return (
                         <tr
                           key={order._id}
-                          className="border-b hover:bg-muted/50 transition-colors"
+                          className={cn(
+                            "border-b transition-colors",
+                            isSelected
+                              ? "bg-primary/5 hover:bg-primary/10"
+                              : "hover:bg-muted/50",
+                          )}
                         >
+                          {/* <td className="p-4">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() =>
+                                toggleSelectOrder(order._id)
+                              }
+                            />
+                          </td> */}
                           <td className="p-4 font-mono font-medium whitespace-nowrap">
                             #{order._id.slice(-6).toUpperCase()}
                           </td>

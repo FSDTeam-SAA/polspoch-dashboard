@@ -2,30 +2,43 @@
 
 import { z } from "zod";
 
+const optionalNumber = z.preprocess(
+  (val) => (val === "" || val === undefined || val === null ? undefined : val),
+  z.coerce.number().min(0).optional(),
+);
+
 // Feature schema
 export const featureSchema = z
   .object({
     reference: z.string().min(1, "Reference is required"),
-    size1: z.coerce.number().positive("Size 1 must be positive"),
-    size2: z.coerce.number().positive("Size 2 must be positive"),
-    thickness: z.coerce.number().positive("Thickness must be positive"),
+    size1: optionalNumber,
+    size2: optionalNumber,
+    thickness: optionalNumber,
     finishQuality: z.string().min(1, "Finish quality is required"),
 
-    // Moved from ProductFormSchema
-    minRange: z.coerce.number().positive("Min range must be positive"),
-    maxRange: z.coerce.number().positive("Max range must be positive"),
-    kgsPerUnit: z.coerce.number().positive("Weight must be positive"),
+    // Range fields made optional and 0-allowed
+    minRange: optionalNumber,
+    maxRange: optionalNumber,
+    kgsPerUnit: optionalNumber,
 
     miterPerUnitPrice: z.coerce
       .number()
-      .positive("Price must be positive")
+      .min(0, "Price cannot be negative")
       .optional(),
     unitSizes: z.array(z.number()).default([]),
   })
-  .refine((data) => data.maxRange > data.minRange, {
-    message: "Max range must be greater than min range",
-    path: ["maxRange"],
-  });
+  .refine(
+    (data) => {
+      if (data.minRange !== undefined && data.maxRange !== undefined) {
+        return data.maxRange >= data.minRange;
+      }
+      return true;
+    },
+    {
+      message: "Max range must be greater than or equal to min range",
+      path: ["maxRange"],
+    },
+  );
 
 // Product form schema
 export const productFormSchema = z.object({
