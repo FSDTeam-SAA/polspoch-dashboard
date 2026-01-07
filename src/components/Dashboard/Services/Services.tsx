@@ -43,6 +43,7 @@ import { CuttingTemplate } from "@/types/cutting";
 import { CreateRebarTemplateDialog } from "./Rebar/CreateRebarTemplateDialog";
 import { CreateBendingTemplateDialog } from "./Bending/CreateBendingTemplateDialog";
 import { CreateCuttingTemplateDialog } from "./Cutting/CreateCuttingTemplateDialog";
+import { CuttingMaterial } from "@/types/cutting";
 
 // --- Demo Data ---
 export interface ShapeDimension {
@@ -59,16 +60,17 @@ export interface ShapeSpec {
 }
 
 export interface ServiceItem {
-  id?: string; // Added for API mapping
-  templateId?: string; // Added for Rebar ID
+  id?: string;
+  templateId?: string;
   shepName: string;
-  type: "rebar" | "cutting" | "bending";
+  type: "rebar" | "bending" | "cutting";
   title: string;
   description: string;
   specs: ShapeSpec;
   dimensions: ShapeDimension[];
   image?: string;
   cuts?: number;
+  rawMaterials?: CuttingMaterial[];
 }
 
 export default function Services() {
@@ -126,8 +128,13 @@ export default function Services() {
       image: t.imageUrl,
       cuts: t.cuts,
       specs: {
-        material: t.materials,
-        thickness: t.thickness.map(String),
+        material: t.materials.map((m) => m.material),
+        thickness: Array.from(
+          new Set(t.materials.flatMap((m) => m.thickness)),
+        ).map(String),
+        // We store the full materials structure in an extra property if needed for EditDialog,
+        // but since EditDialog will likely fetch fresh or we can cast specs.material back.
+        // Actually, let's keep ServiceItem specs compatible with UI and cast in Dialog.
       },
       dimensions: t.dimensions.map((d) => ({
         label: d.label,
@@ -139,6 +146,8 @@ export default function Services() {
         min: d.minRange,
         max: d.maxRange,
       })),
+      // Adding raw materials for EditDialog to access easily
+      rawMaterials: t.materials,
     }));
   }, [cuttingData]);
 
@@ -159,8 +168,10 @@ export default function Services() {
         image: t.imageUrl,
         cuts: t.cuts,
         specs: {
-          material: t.materials,
-          thickness: t.thickness.map(String),
+          material: t.materials.map((m) => m.material),
+          thickness: Array.from(
+            new Set(t.materials.flatMap((m) => m.thickness)),
+          ).map(String),
         },
         dimensions: t.dimensions.map((d) => ({
           label: d.label,
@@ -172,6 +183,7 @@ export default function Services() {
           min: d.minRange,
           max: d.maxRange,
         })),
+        rawMaterials: t.materials as unknown as CuttingMaterial[],
       };
       return baseItem;
     });
@@ -412,43 +424,82 @@ function ShapeCard({
         )}
 
         {/* Material & Thickness Section */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {item.specs.material && item.specs.material.length > 0 && (
-            <div className="space-y-3">
+        <div className="space-y-6">
+          {(item.type === "cutting" || item.type === "bending") &&
+          item.rawMaterials ? (
+            <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 <Layers className="h-4 w-4 text-[#7E1800]" />
-                Materials
+                Materials & Thicknesses
               </div>
-              <div className="flex flex-wrap gap-2">
-                {item.specs.material.map((mat) => (
-                  <Badge
-                    key={mat}
-                    variant="secondary"
-                    className="font-normal bg-[#7E1800]/10 text-[#7E1800] border-transparent hover:bg-[#7E1800]/20"
+              <div className="grid grid-cols-1 gap-4">
+                {item.rawMaterials.map((mat: CuttingMaterial, idx: number) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col gap-3 p-4 rounded-lg bg-[#7E1800]/5 border border-[#7E1800]/10 hover:bg-[#7E1800]/10 transition-colors"
                   >
-                    {mat}
-                  </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="font-bold bg-[#7E1800]/10 text-[#7E1800] border-transparent px-3 py-1"
+                      >
+                        {mat.material}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-2 ml-1">
+                      {mat.thickness.map((t: number, tIdx: number) => (
+                        <div
+                          key={tIdx}
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold border border-[#7E1800]/20 bg-white text-[#7E1800] shadow-sm transform hover:scale-110 transition-transform"
+                        >
+                          {t}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          )}
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <CheckCircle2 className="h-4 w-4 text-[#7E1800]" />
-              Thickness (mm)
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {item.specs.thickness.map((t) => (
-                <div
-                  key={t}
-                  className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border border-[#7E1800]/20 bg-[#7E1800]/5 text-[#7E1800]"
-                >
-                  {t}
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {item.specs.material && item.specs.material.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    <Layers className="h-4 w-4 text-[#7E1800]" />
+                    Materials
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.specs.material.map((mat) => (
+                      <Badge
+                        key={mat}
+                        variant="secondary"
+                        className="font-normal bg-[#7E1800]/10 text-[#7E1800] border-transparent hover:bg-[#7E1800]/20"
+                      >
+                        {mat}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  <CheckCircle2 className="h-4 w-4 text-[#7E1800]" />
+                  Thickness (mm)
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.specs.thickness.map((t) => (
+                    <div
+                      key={t}
+                      className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border border-[#7E1800]/20 bg-[#7E1800]/5 text-[#7E1800]"
+                    >
+                      {t}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Dimensions Section */}

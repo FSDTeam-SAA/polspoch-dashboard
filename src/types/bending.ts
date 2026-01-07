@@ -7,6 +7,12 @@ export interface BendingDimension {
   unit: string;
 }
 
+export interface BendingMaterial {
+  material: string;
+  thickness: number[];
+  _id?: string;
+}
+
 export interface BendingDimensionInput {
   key: string;
   label: string;
@@ -22,8 +28,7 @@ export interface BendingTemplate {
   shapeName: string;
   imageUrl: string;
   cuts: number;
-  thickness: number[];
-  materials: string[];
+  materials: BendingMaterial[];
   dimensions: BendingDimension[];
   updatedAt: string;
 }

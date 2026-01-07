@@ -15,6 +15,12 @@ export interface CuttingDimensionInput {
   unit: string;
 }
 
+export interface CuttingMaterial {
+  material: string;
+  thickness: number[];
+  _id?: string;
+}
+
 export interface CuttingTemplate {
   _id: string;
   templateId: string;
@@ -22,8 +28,7 @@ export interface CuttingTemplate {
   type: string;
   imageUrl: string;
   cuts: number;
-  thickness: number[];
-  materials: string[];
+  materials: CuttingMaterial[];
   dimensions: CuttingDimension[];
   isActive: boolean;
   updatedAt: string;
