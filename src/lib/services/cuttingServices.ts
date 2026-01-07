@@ -22,8 +22,7 @@ class CuttingServices {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: { material: string; thickness: number[] }[];
       dimensions: {
         label: string;
         minRange: number;
@@ -41,7 +40,6 @@ class CuttingServices {
     formData.append("cuts", String(input.cuts));
 
     // Append array fields as stringified JSON
-    formData.append("thickness", JSON.stringify(input.thickness));
     formData.append("materials", JSON.stringify(input.materials));
     formData.append("dimensions", JSON.stringify(input.dimensions));
 
@@ -67,8 +65,7 @@ class CuttingServices {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: { material: string; thickness: number[] }[];
       dimensions: {
         label: string;
         minRange: number;
@@ -86,7 +83,6 @@ class CuttingServices {
     formData.append("cuts", String(input.cuts));
 
     // Append array fields as stringified JSON
-    formData.append("thickness", JSON.stringify(input.thickness.map(Number)));
     formData.append("materials", JSON.stringify(input.materials));
     formData.append("dimensions", JSON.stringify(input.dimensions));
 

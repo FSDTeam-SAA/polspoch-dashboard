@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  Control,
+  UseFormRegister,
+} from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -30,8 +35,10 @@ interface CreateCuttingFormValues {
   templateId: string;
   shapeName: string;
   cuts: number;
-  thickness: { value: number }[];
-  materials: { value: string }[];
+  materials: {
+    material: string;
+    thickness: { value: number }[];
+  }[];
   dimensions: CuttingDimensionInput[];
   image: FileList;
 }
@@ -50,8 +57,7 @@ export function CreateCuttingTemplateDialog({
         templateId: "",
         shapeName: "",
         cuts: 0,
-        thickness: [{ value: 0 }],
-        materials: [{ value: "" }],
+        materials: [{ material: "", thickness: [{ value: 0 }] }],
         dimensions: [
           { key: "A", label: "Length A", minRange: 0, maxRange: 0, unit: "MM" },
         ],
@@ -65,15 +71,6 @@ export function CreateCuttingTemplateDialog({
   } = useFieldArray({
     control,
     name: "dimensions",
-  });
-
-  const {
-    fields: thicknessFields,
-    append: appendThickness,
-    remove: removeThickness,
-  } = useFieldArray({
-    control,
-    name: "thickness",
   });
 
   const {
@@ -106,21 +103,18 @@ export function CreateCuttingTemplateDialog({
       return;
     }
 
-    if (data.thickness.length === 0) {
-      toast.error("Please add at least one thickness");
-      return;
-    }
-
-    if (data.materials.length === 0) {
-      toast.error("Please add at least one material");
+    if (data.materials.some((m) => m.thickness.length === 0)) {
+      toast.error("Each material must have at least one thickness");
       return;
     }
 
     // Transform data to match API expectation
     const payload = {
       ...data,
-      thickness: data.thickness.map((t) => t.value),
-      materials: data.materials.map((m) => m.value),
+      materials: data.materials.map((m) => ({
+        material: m.material,
+        thickness: m.thickness.map((t) => Number(t.value)),
+      })),
     };
 
     createTemplate(payload, {
@@ -213,83 +207,27 @@ export function CreateCuttingTemplateDialog({
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Thickness (mm)</Label>
+              <Label>Materials & Thicknesses</Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => appendThickness({ value: 0 })}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Thickness
-              </Button>
-            </div>
-            {formState.errors.thickness && (
-              <p className="text-destructive text-xs">
-                At least one thickness is required
-              </p>
-            )}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {thicknessFields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
-                  <Input
-                    type="number"
-                    placeholder="e.g. 1.5"
-                    step="0.1"
-                    {...register(`thickness.${index}.value` as const, {
-                      required: true,
-                      valueAsNumber: true,
-                    })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive/90 shrink-0"
-                    onClick={() => removeThickness(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Materials</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => appendMaterial({ value: "" })}
+                onClick={() =>
+                  appendMaterial({ material: "", thickness: [{ value: 0 }] })
+                }
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Material
               </Button>
             </div>
-            {formState.errors.materials && (
-              <p className="text-destructive text-xs">
-                At least one material is required
-              </p>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-4">
               {materialFields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
-                  <Input
-                    placeholder="e.g. RAWSTEEL"
-                    {...register(`materials.${index}.value` as const, {
-                      required: true,
-                    })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive/90 shrink-0"
-                    onClick={() => removeMaterial(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <MaterialField
+                  key={field.id}
+                  index={index}
+                  control={control}
+                  register={register}
+                  remove={removeMaterial}
+                />
               ))}
             </div>
           </div>
@@ -452,5 +390,93 @@ export function CreateCuttingTemplateDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MaterialField({
+  index,
+  control,
+  register,
+  remove,
+}: {
+  index: number;
+  control: Control<CreateCuttingFormValues>;
+  register: UseFormRegister<CreateCuttingFormValues>;
+  remove: (index: number) => void;
+}) {
+  const {
+    fields,
+    append,
+    remove: removeThickness,
+  } = useFieldArray({
+    control,
+    name: `materials.${index}.thickness`,
+  });
+
+  return (
+    <div className="p-4 border rounded-md bg-muted/20 space-y-4">
+      <div className="flex gap-2 items-center">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs">Material Name</Label>
+          <Input
+            {...register(`materials.${index}.material` as const, {
+              required: true,
+            })}
+            placeholder="e.g. RAWSTEEL"
+          />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive/90 mt-5"
+          onClick={() => remove(index)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Thicknesses (mm)</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => append({ value: 0 })}
+          >
+            <Plus className="h-3 w-3 mr-1" /> Add Thickness
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {fields.map((field, tIndex) => (
+            <div key={field.id} className="flex gap-1">
+              <Input
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                {...register(
+                  `materials.${index}.thickness.${tIndex}.value` as const,
+                  {
+                    required: true,
+                    valueAsNumber: true,
+                  },
+                )}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive/90 shrink-0"
+                onClick={() => removeThickness(tIndex)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

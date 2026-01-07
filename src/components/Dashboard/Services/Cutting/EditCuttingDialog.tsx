@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  Control,
+  UseFormRegister,
+} from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +21,7 @@ import { Plus, Trash2, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ServiceItem } from "../Services";
 import { useUpdateCuttingTemplate } from "@/lib/hooks/useCuttingServices";
+import { CuttingMaterial } from "@/types/cutting";
 
 interface CuttingDimensionInput {
   key: string;
@@ -29,8 +35,10 @@ interface EditCuttingFormValues {
   templateId: string;
   shapeName: string;
   cuts: number;
-  thickness: { value: number }[];
-  materials: { value: string }[];
+  materials: {
+    material: string;
+    thickness: { value: number }[];
+  }[];
   dimensions: CuttingDimensionInput[];
   image?: FileList;
 }
@@ -54,8 +62,7 @@ export function EditCuttingDialog({
         templateId: "",
         shapeName: "",
         cuts: 0,
-        thickness: [{ value: 0 }],
-        materials: [{ value: "" }],
+        materials: [{ material: "", thickness: [{ value: 0 }] }],
         dimensions: [
           { key: "A", label: "Length A", minRange: 0, maxRange: 0, unit: "MM" },
         ],
@@ -69,15 +76,6 @@ export function EditCuttingDialog({
   } = useFieldArray({
     control,
     name: "dimensions",
-  });
-
-  const {
-    fields: thicknessFields,
-    append: appendThickness,
-    remove: removeThickness,
-  } = useFieldArray({
-    control,
-    name: "thickness",
   });
 
   const {
@@ -95,12 +93,22 @@ export function EditCuttingDialog({
 
   useEffect(() => {
     if (service && open) {
+      // Find the template in cuttingData if available?
+      const materialsToReset = service.rawMaterials || service.specs.material;
+
       reset({
         templateId: service.templateId || "",
         shapeName: service.shepName,
         cuts: service.cuts || 0,
-        thickness: service.specs.thickness.map((t) => ({ value: Number(t) })),
-        materials: service.specs.material.map((m) => ({ value: m })),
+        materials: Array.isArray(materialsToReset)
+          ? (materialsToReset as (string | CuttingMaterial)[]).map((m) => ({
+              material: typeof m === "string" ? m : m.material || "",
+              thickness:
+                typeof m !== "string" && Array.isArray(m.thickness)
+                  ? m.thickness.map((t) => ({ value: Number(t) }))
+                  : [],
+            }))
+          : [],
         dimensions: service.dimensions.map((d) => ({
           key: d.key || "",
           label: d.label,
@@ -136,8 +144,10 @@ export function EditCuttingDialog({
         templateId: data.templateId,
         shapeName: data.shapeName,
         cuts: data.cuts,
-        thickness: data.thickness.map((t) => Number(t.value)),
-        materials: data.materials.map((m) => m.value),
+        materials: data.materials.map((m) => ({
+          material: m.material,
+          thickness: m.thickness.map((t) => Number(t.value)),
+        })),
         dimensions: data.dimensions.map((d) => ({
           key: d.key,
           label: d.label,
@@ -207,73 +217,27 @@ export function EditCuttingDialog({
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Thickness (mm)</Label>
-              {/* No API to update thickness, visual only */}
+              <Label>Materials & Thicknesses</Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => appendThickness({ value: 0 })}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Thickness
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {thicknessFields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
-                  <Input
-                    type="number"
-                    step="0.1"
-                    {...register(`thickness.${index}.value` as const, {
-                      required: true,
-                      valueAsNumber: true,
-                    })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive/90 shrink-0"
-                    onClick={() => removeThickness(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Materials</Label>
-              {/* No API to update materials, visual only */}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => appendMaterial({ value: "" })}
+                onClick={() =>
+                  appendMaterial({ material: "", thickness: [{ value: 0 }] })
+                }
               >
                 <Plus className="h-4 w-4 mr-1" /> Add Material
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-4">
               {materialFields.map((field, index) => (
-                <div key={field.id} className="flex gap-2">
-                  <Input
-                    {...register(`materials.${index}.value` as const, {
-                      required: true,
-                    })}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive/90 shrink-0"
-                    onClick={() => removeMaterial(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <MaterialField
+                  key={field.id}
+                  index={index}
+                  control={control}
+                  register={register}
+                  remove={removeMaterial}
+                />
               ))}
             </div>
           </div>
@@ -436,5 +400,93 @@ export function EditCuttingDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function MaterialField({
+  index,
+  control,
+  register,
+  remove,
+}: {
+  index: number;
+  control: Control<EditCuttingFormValues>;
+  register: UseFormRegister<EditCuttingFormValues>;
+  remove: (index: number) => void;
+}) {
+  const {
+    fields,
+    append,
+    remove: removeThickness,
+  } = useFieldArray({
+    control,
+    name: `materials.${index}.thickness`,
+  });
+
+  return (
+    <div className="p-4 border rounded-md bg-muted/20 space-y-4">
+      <div className="flex gap-2 items-center">
+        <div className="flex-1 space-y-1">
+          <Label className="text-xs">Material Name</Label>
+          <Input
+            {...register(`materials.${index}.material` as const, {
+              required: true,
+            })}
+            placeholder="e.g. RAWSTEEL"
+          />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive/90 mt-5"
+          onClick={() => remove(index)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Thicknesses (mm)</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => append({ value: 0 })}
+          >
+            <Plus className="h-3 w-3 mr-1" /> Add Thickness
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {fields.map((field, tIndex) => (
+            <div key={field.id} className="flex gap-1">
+              <Input
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                {...register(
+                  `materials.${index}.thickness.${tIndex}.value` as const,
+                  {
+                    required: true,
+                    valueAsNumber: true,
+                  },
+                )}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive/90 shrink-0"
+                onClick={() => removeThickness(tIndex)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
