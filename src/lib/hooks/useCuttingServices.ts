@@ -20,8 +20,7 @@ export function useUpdateCuttingTemplate() {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: { material: string; thickness: number[] }[];
       dimensions: CuttingDimensionInput[];
       image?: File;
     }) => cuttingServices.updateCuttingTemplate(input),
@@ -39,8 +38,7 @@ export function useCreateCuttingTemplate() {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: { material: string; thickness: number[] }[];
       dimensions: CuttingDimensionInput[];
       image: FileList;
     }) => cuttingServices.createCuttingTemplate(input),

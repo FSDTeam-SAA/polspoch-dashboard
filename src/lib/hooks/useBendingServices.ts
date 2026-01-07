@@ -33,8 +33,10 @@ export function useUpdateBendingTemplate() {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: {
+        material: string;
+        thickness: number[];
+      }[];
       dimensions: BendingDimensionInput[];
       image?: File;
     }) => bendingServices.updateBendingTemplate(input),
@@ -52,8 +54,10 @@ export function useCreateBendingTemplate() {
       templateId: string;
       shapeName: string;
       cuts: number;
-      thickness: number[];
-      materials: string[];
+      materials: {
+        material: string;
+        thickness: number[];
+      }[];
       dimensions: BendingDimensionInput[];
       image: FileList;
     }) => bendingServices.createBendingTemplate(input),
