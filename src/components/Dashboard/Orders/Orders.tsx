@@ -174,12 +174,16 @@ export default function Orders() {
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
-        className="space-y-6"
+        className="space-y-6 cu"
       >
         <div className="flex items-center justify-between">
           <TabsList className="grid w-full max-w-[400px] grid-cols-2">
-            <TabsTrigger value="services">Services</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="services" className="cursor-pointer">
+              Services
+            </TabsTrigger>
+            <TabsTrigger value="products" className="cursor-pointer">
+              Products
+            </TabsTrigger>
           </TabsList>
 
           <Button
@@ -196,7 +200,7 @@ export default function Orders() {
           </Button>
         </div>
 
-        <TabsContent value={activeTab} className="space-y-6 border-none p-0">
+        <TabsContent value={activeTab} className="space-y-6 border-none p-0 cu">
           <div className="rounded-md border bg-card shadow-sm overflow-hidden">
             <div className="relative w-full overflow-auto">
               {filteredOrders.length === 0 ? (
