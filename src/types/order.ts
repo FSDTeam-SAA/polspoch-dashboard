@@ -19,13 +19,15 @@ export interface Service {
 export interface SelectedFeature {
   _id?: string;
   reference: string;
-  size1: number;
-  size2: number;
-  thickness: number;
+  size1: number | null;
+  size2: number | null;
+  thickness: number | null;
   finishQuality: string;
   kgsPerUnit?: number;
   miterPerUnitPrice?: number;
   unitSizes?: number[];
+  minRange?: number | null;
+  maxRange?: number | null;
 }
 
 export interface ProductImage {
@@ -71,6 +73,28 @@ export interface CartItem {
   selectedFeature?: SelectedFeature;
   product?: ProductDetails;
   service?: Service;
+  serviceData?: {
+    material?: string;
+    thickness?: number;
+    units?: number;
+    serviceType?: string;
+    diameter?: number;
+    sizeA?: number;
+    sizeB?: number;
+    length?: number;
+    totalLength?: number;
+    totalWidth?: number;
+    internalCuts?: number;
+    totalWeight?: number;
+    degrees?: {
+      degree1?: number;
+      degree2?: number;
+      degree3?: number;
+      degree4?: number;
+      degree5?: number;
+      degree6?: number;
+    };
+  };
   userId?: string;
   cartId?: CartItem;
 }

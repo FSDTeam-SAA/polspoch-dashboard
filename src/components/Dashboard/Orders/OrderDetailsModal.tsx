@@ -65,11 +65,12 @@ export default function OrderDetailsModal({
   const displayImages =
     itemImages.length > 0 ? itemImages : ["/placeholder.svg"];
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const activeImage = selectedImage || displayImages[0];
 
   return (
     <div>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon">
             <Eye className="h-4 w-4" />
@@ -208,7 +209,8 @@ export default function OrderDetailsModal({
                     const itemName = isProduct
                       ? actualItem.product?.productId?.productName ||
                         actualItem.product?.productName
-                      : actualItem.service?.templateName;
+                      : actualItem.serviceData?.serviceType ||
+                        actualItem.service?.templateName;
 
                     const itemData: Record<
                       string,
@@ -218,63 +220,153 @@ export default function OrderDetailsModal({
                           Family:
                             actualItem.product?.productId?.family ||
                             actualItem.product?.family ||
-                            "N/A",
-                          "Product Name": itemName || "N/A",
-                          "Unit Size": actualItem.unitSize || "N/A",
+                            "General",
+                          "Product Name":
+                            actualItem.product?.productId?.productName ||
+                            actualItem.product?.productName ||
+                            "Custom Product",
+                          "Unit Size": actualItem.unitSize || "As Specified",
                           "Customization Note":
                             actualItem.product?.productId
                               ?.unitSizeCustomizationNote ||
                             actualItem.product?.unitSizeCustomizationNote ||
-                            "N/A",
+                            "Standard Configuration",
                           "Measure Unit":
                             actualItem.product?.productId?.measureUnit ||
                             actualItem.product?.measureUnit ||
-                            "N/A",
+                            "Units",
                           Reference:
-                            actualItem.selectedFeature?.reference || "N/A",
-                          "Size 1": actualItem.selectedFeature?.size1 || "N/A",
-                          "Size 2": actualItem.selectedFeature?.size2 || "N/A",
+                            actualItem.selectedFeature?.reference || "Default",
+                          "Size 1":
+                            actualItem.selectedFeature?.size1 !== null &&
+                            actualItem.selectedFeature?.size1 !== undefined
+                              ? actualItem.selectedFeature.size1
+                              : "Standard",
+                          "Size 2":
+                            actualItem.selectedFeature?.size2 !== null &&
+                            actualItem.selectedFeature?.size2 !== undefined
+                              ? actualItem.selectedFeature.size2
+                              : "Not Applicable",
                           Thickness:
-                            actualItem.selectedFeature?.thickness || "N/A",
+                            actualItem.selectedFeature?.thickness !== null &&
+                            actualItem.selectedFeature?.thickness !== undefined
+                              ? actualItem.selectedFeature.thickness
+                              : "Standard Profile",
                           "Finish Quality":
-                            actualItem.selectedFeature?.finishQuality || "N/A",
+                            actualItem.selectedFeature?.finishQuality ||
+                            "Standard Finish",
                           "Unit Sizes": actualItem.selectedFeature?.unitSizes
                             ? actualItem.selectedFeature.unitSizes.join(", ")
-                            : "N/A",
+                            : "Custom Length",
                           "Kgs per Unit":
-                            actualItem.selectedFeature?.kgsPerUnit || "N/A",
+                            actualItem.selectedFeature?.kgsPerUnit ||
+                            "As Per Specification",
                           "Miter Per Unit Price":
                             actualItem.selectedFeature?.miterPerUnitPrice ||
-                            "N/A",
-                          Range: actualItem.product?.range || "N/A",
-                          Quantity: actualItem.quantity || "N/A",
+                            "Contact for Pricing",
+                          Range:
+                            actualItem.selectedFeature?.minRange !== null &&
+                            actualItem.selectedFeature?.maxRange !== null &&
+                            actualItem.selectedFeature?.minRange !==
+                              undefined &&
+                            actualItem.selectedFeature?.maxRange !== undefined
+                              ? `${actualItem.selectedFeature.minRange} - ${actualItem.selectedFeature.maxRange}`
+                              : actualItem.product?.range || "Fixed Size",
+                          Quantity: actualItem.quantity || 1,
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
-                            : "N/A",
+                            : "Pending Calculation",
                         }
-                      : {
-                          "Service Name": itemName || "N/A",
-                          "Service Type":
-                            actualItem.service?.serviceType || "N/A",
-                          Diameter: actualItem.service?.diameter || "N/A",
-                          Material: actualItem.service?.material || "N/A",
-                          "Price per Unit": actualItem.service?.price
-                            ? `€${actualItem.service.price}`
-                            : "N/A",
-                          "Dimension Sizes": actualItem.service?.sizes
-                            ? Object.entries(actualItem.service.sizes)
-                                .filter(
-                                  ([, v]) =>
-                                    v !== 0 && v !== undefined && v !== null,
-                                )
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(", ")
-                            : "N/A",
-                          Quantity: actualItem.quantity || "N/A",
-                          "Total Amount": actualItem.totalAmount
-                            ? `€${actualItem.totalAmount.toLocaleString()}`
-                            : "N/A",
-                        };
+                      : actualItem.serviceData
+                        ? // New serviceData structure
+                          {
+                            "Service Type":
+                              actualItem.serviceData.serviceType ||
+                              "Custom Service",
+                            Material:
+                              actualItem.serviceData.material ||
+                              "Standard Material",
+                            ...(actualItem.serviceData.thickness !==
+                              undefined && {
+                              "Thickness (mm)":
+                                actualItem.serviceData.thickness,
+                            }),
+                            ...(actualItem.serviceData.diameter !==
+                              undefined && {
+                              "Diameter (mm)": actualItem.serviceData.diameter,
+                            }),
+                            Units: actualItem.serviceData.units || "As Ordered",
+                            ...(actualItem.serviceData.sizeA !== undefined && {
+                              "Size A": actualItem.serviceData.sizeA,
+                            }),
+                            ...(actualItem.serviceData.sizeB !== undefined && {
+                              "Size B": actualItem.serviceData.sizeB,
+                            }),
+                            ...(actualItem.serviceData.length !== undefined && {
+                              Length: actualItem.serviceData.length,
+                            }),
+                            ...(actualItem.serviceData.totalLength !==
+                              undefined && {
+                              "Total Length":
+                                actualItem.serviceData.totalLength,
+                            }),
+                            ...(actualItem.serviceData.totalWidth !==
+                              undefined && {
+                              "Total Width": actualItem.serviceData.totalWidth,
+                            }),
+                            ...(actualItem.serviceData.internalCuts !==
+                              undefined && {
+                              "Internal Cuts":
+                                actualItem.serviceData.internalCuts,
+                            }),
+                            ...(actualItem.serviceData.totalWeight !==
+                              undefined && {
+                              "Total Weight (kg)":
+                                actualItem.serviceData.totalWeight.toFixed(2),
+                            }),
+                            ...(actualItem.serviceData.degrees && {
+                              Degrees:
+                                Object.entries(actualItem.serviceData.degrees)
+                                  .filter(
+                                    ([, v]) =>
+                                      v !== 0 && v !== undefined && v !== null,
+                                  )
+                                  .map(([k, v]) => `${k}: ${v}°`)
+                                  .join(", ") || "Standard Angle",
+                            }),
+                            Quantity: actualItem.quantity || 1,
+                            "Total Amount": actualItem.totalAmount
+                              ? `€${actualItem.totalAmount.toLocaleString()}`
+                              : "Pending Calculation",
+                          }
+                        : // Old service structure (fallback)
+                          {
+                            "Service Name": itemName || "Custom Service",
+                            "Service Type":
+                              actualItem.service?.serviceType ||
+                              "General Service",
+                            Diameter:
+                              actualItem.service?.diameter || "Standard Size",
+                            Material:
+                              actualItem.service?.material ||
+                              "Standard Material",
+                            "Price per Unit": actualItem.service?.price
+                              ? `€${actualItem.service.price}`
+                              : "Contact for Quote",
+                            "Dimension Sizes": actualItem.service?.sizes
+                              ? Object.entries(actualItem.service.sizes)
+                                  .filter(
+                                    ([, v]) =>
+                                      v !== 0 && v !== undefined && v !== null,
+                                  )
+                                  .map(([k, v]) => `${k}: ${v}`)
+                                  .join(", ")
+                              : "Custom Dimensions",
+                            Quantity: actualItem.quantity || 1,
+                            "Total Amount": actualItem.totalAmount
+                              ? `€${actualItem.totalAmount.toLocaleString()}`
+                              : "Pending Calculation",
+                          };
 
                     return (
                       <div
@@ -323,13 +415,8 @@ export default function OrderDetailsModal({
             </div>
             <Button
               variant="outline"
-              onClick={() =>
-                (
-                  document.querySelector(
-                    'button[aria-label="Close"]',
-                  ) as HTMLElement
-                )?.click()
-              }
+              className="cursor-pointer"
+              onClick={() => setOpen(false)}
             >
               Close Details
             </Button>
