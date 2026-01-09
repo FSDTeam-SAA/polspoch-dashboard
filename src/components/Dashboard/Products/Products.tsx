@@ -71,7 +71,9 @@ export default function Products() {
   };
 
   const filteredProducts = products?.filter((product) =>
-    product.productName.toLowerCase().includes(searchTerm.toLowerCase()),
+    (product?.productName || "")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()),
   );
 
   if (isLoading) {
@@ -148,14 +150,17 @@ export default function Products() {
               <TableBody>
                 {filteredProducts && filteredProducts.length > 0 ? (
                   filteredProducts.map((product) => (
-                    <TableRow key={product._id} className="group">
+                    <TableRow key={product?._id} className="group">
                       <TableCell>
                         <div className="relative h-12 w-12 rounded-md overflow-hidden border bg-muted">
-                          {product.productImage &&
+                          {product?.productImage &&
                           product.productImage.length > 0 ? (
                             <Image
-                              src={product.productImage[0].url}
-                              alt={product.productName}
+                              src={
+                                product.productImage[0]?.url ||
+                                "/placeholder.jpg"
+                              }
+                              alt={product.productName || "Product"}
                               fill
                               className="object-cover"
                             />
@@ -168,8 +173,10 @@ export default function Products() {
                       </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          <span>{product.productName}</span>
-                          {product.unitSizeCustomizationNote && (
+                          <span>
+                            {product?.productName || "Unnamed Product"}
+                          </span>
+                          {product?.unitSizeCustomizationNote && (
                             <span className="text-xs text-muted-foreground truncate max-w-[200px]">
                               {product.unitSizeCustomizationNote}
                             </span>
@@ -177,29 +184,31 @@ export default function Products() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {typeof product.family === "object"
-                          ? product.family.familyName
-                          : product.family}
+                        {product?.family
+                          ? typeof product.family === "object"
+                            ? product.family?.familyName || "Unknown Family"
+                            : product.family
+                          : "Unknown Family"}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="font-normal">
-                          {product.features.length} variant
-                          {product.features.length !== 1 ? "s" : ""}
+                          {product?.features?.length || 0} variant
+                          {(product?.features?.length || 0) !== 1 ? "s" : ""}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {product.features.length > 0 ? (
+                          {product?.features && product.features.length > 0 ? (
                             <>
                               {Math.min(
                                 ...(product.features.map(
-                                  (f) => f.minRange,
+                                  (f) => f?.minRange || 0,
                                 ) as number[]),
                               )}
                               -
                               {Math.max(
                                 ...(product.features.map(
-                                  (f) => f.maxRange,
+                                  (f) => f?.maxRange || 0,
                                 ) as number[]),
                               )}
                             </>
@@ -207,26 +216,26 @@ export default function Products() {
                             "N/A"
                           )}{" "}
                           <span className="text-muted-foreground">
-                            {product.measureUnit}
+                            {product?.measureUnit || ""}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            product.availabilityNote?.toLowerCase() ===
+                            product?.availabilityNote?.toLowerCase() ===
                             "in stock"
                               ? "default"
                               : "secondary"
                           }
                           className={
-                            product.availabilityNote?.toLowerCase() ===
+                            product?.availabilityNote?.toLowerCase() ===
                             "in stock"
                               ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200"
                               : "bg-yellow-500/15 text-yellow-700 hover:bg-yellow-500/25 border-yellow-200"
                           }
                         >
-                          {product.availabilityNote || "Unknown"}
+                          {product?.availabilityNote || "Unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="">
@@ -284,7 +293,8 @@ export default function Products() {
           <DialogHeader className="p-6 pb-2">
             <DialogTitle>Product Details</DialogTitle>
             <DialogDescription>
-              Detailed information about {selectedProduct?.productName}
+              Detailed information about{" "}
+              {selectedProduct?.productName || "this product"}
             </DialogDescription>
           </DialogHeader>
           {selectedProduct && (
@@ -296,12 +306,12 @@ export default function Products() {
                   <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                     {selectedProduct.productImage.map((img) => (
                       <div
-                        key={img._id}
+                        key={img?._id}
                         className="relative h-48 w-48 shrink-0 rounded-lg overflow-hidden border bg-muted"
                       >
                         <Image
-                          src={img.url}
-                          alt={selectedProduct.productName}
+                          src={img?.url || "/placeholder.jpg"}
+                          alt={selectedProduct.productName || "Product image"}
                           fill
                           className="object-cover"
                         />
@@ -323,9 +333,11 @@ export default function Products() {
                       Family
                     </p>
                     <p className="font-semibold">
-                      {typeof selectedProduct.family === "object"
-                        ? selectedProduct.family.familyName
-                        : selectedProduct.family}
+                      {selectedProduct?.family
+                        ? typeof selectedProduct.family === "object"
+                          ? selectedProduct.family?.familyName || "Unknown"
+                          : selectedProduct.family
+                        : "Unknown"}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -338,20 +350,20 @@ export default function Products() {
                         <>
                           {Math.min(
                             ...(selectedProduct.features.map(
-                              (f) => f.minRange,
+                              (f) => f?.minRange || 0,
                             ) as number[]),
                           )}
                           -
                           {Math.max(
                             ...(selectedProduct.features.map(
-                              (f) => f.maxRange,
+                              (f) => f?.maxRange || 0,
                             ) as number[]),
                           )}
                         </>
                       ) : (
                         "N/A"
                       )}{" "}
-                      {selectedProduct.measureUnit}
+                      {selectedProduct.measureUnit || ""}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -361,7 +373,7 @@ export default function Products() {
                     <p className="font-semibold">
                       {selectedProduct.features &&
                       selectedProduct.features.length > 0
-                        ? `${selectedProduct.features[0].kgsPerUnit} kg/unit` // Showing first variant's weight or maybe range if needed
+                        ? `${selectedProduct.features[0]?.kgsPerUnit || "-"} kg/unit` // Showing first variant's weight or maybe range if needed
                         : "N/A"}
                     </p>
                   </div>
@@ -404,24 +416,27 @@ export default function Products() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {selectedProduct.features.map((feature, index) => (
                           <Card
-                            key={feature._id || index}
+                            key={feature?._id || index}
                             className="shadow-none border bg-card"
                           >
                             <CardContent className="p-3 text-sm space-y-2">
                               <div className="flex justify-between items-center border-b pb-2">
                                 <span className="font-medium">
-                                  {feature.reference}
+                                  {feature?.reference || "N/A"}
                                 </span>
                                 <Badge variant="outline" className="text-xs">
-                                  {feature.finishQuality}
+                                  {feature?.finishQuality || "N/A"}
                                 </Badge>
                               </div>
                               <div className="grid grid-cols-2 gap-2 text-muted-foreground">
                                 <div>
-                                  Size: {feature.size1} x {feature.size2}
+                                  Size: {feature?.size1 || 0} x{" "}
+                                  {feature?.size2 || 0}
                                 </div>
-                                <div>Thickness: {feature.thickness}mm</div>
-                                {feature.miterPerUnitPrice && (
+                                <div>
+                                  Thickness: {feature?.thickness || 0}mm
+                                </div>
+                                {feature?.miterPerUnitPrice && (
                                   <div className="col-span-2 text-foreground font-medium">
                                     ${feature.miterPerUnitPrice}/unit
                                   </div>
@@ -450,7 +465,7 @@ export default function Products() {
             <DialogDescription className="py-2">
               Are you sure you want to delete{" "}
               <span className="font-semibold text-foreground">
-                {productToDelete?.productName}
+                {productToDelete?.productName || "this product"}
               </span>
               ? This action cannot be undone and will permanently remove the
               product from your catalog.
