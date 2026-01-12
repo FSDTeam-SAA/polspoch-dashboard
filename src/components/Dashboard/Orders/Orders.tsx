@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Order } from "@/types/order";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -71,19 +71,21 @@ export default function Orders() {
     setSelectedOrderIds([]);
   };
 
-  const toggleSelectAll = () => {
-    if (selectedOrderIds.length === currentOrders.length) {
-      setSelectedOrderIds([]);
-    } else {
-      setSelectedOrderIds(currentOrders.map((o) => o._id));
-    }
-  };
-
-  const toggleSelectOrder = (id: string) => {
-    setSelectedOrderIds((prev) =>
-      prev.includes(id) ? prev.filter((oid) => oid !== id) : [...prev, id],
-    );
-  };
+  /*
+    const toggleSelectAll = () => {
+      if (selectedOrderIds.length === currentOrders.length) {
+        setSelectedOrderIds([]);
+      } else {
+        setSelectedOrderIds(currentOrders.map((o) => o._id));
+      }
+    };
+  
+    const toggleSelectOrder = (id: string) => {
+      setSelectedOrderIds((prev) =>
+        prev.includes(id) ? prev.filter((oid) => oid !== id) : [...prev, id],
+      );
+    };
+  */
 
   const handleDelete = async () => {
     if (selectedOrderIds.length === 0) return;
