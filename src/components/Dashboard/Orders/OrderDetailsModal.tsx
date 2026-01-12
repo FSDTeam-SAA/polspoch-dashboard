@@ -11,7 +11,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Eye, ChevronLeft, Package, Settings } from "lucide-react";
+import { Eye, ChevronLeft, Package, Settings, MapPin } from "lucide-react";
+import { useGetShippingSingle } from "@/lib/hooks/useShippingSingleGet";
+
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -24,6 +26,8 @@ export default function OrderDetailsModal({
   order,
   filterType,
 }: OrderDetailsModalProps) {
+  const { data: shippingData, isLoading: shippingLoading } =
+    useGetShippingSingle(order._id);
   const allCartItems = order.cartItems || [];
 
   // Filter items based on the tab type
@@ -72,7 +76,11 @@ export default function OrderDetailsModal({
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => console.log("Selected Order Data:", order)}
+          >
             <Eye className="h-4 w-4" />
             <span className="sr-only">View Details</span>
           </Button>
@@ -192,6 +200,69 @@ export default function OrderDetailsModal({
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4" /> Shipping Information
+                  </h3>
+                  {shippingLoading ? (
+                    <div className="text-sm text-muted-foreground animate-pulse">
+                      Loading shipping details...
+                    </div>
+                  ) : shippingData ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <span className="text-xs text-muted-foreground block">
+                          Receiver
+                        </span>
+                        <span className="text-sm font-medium">
+                          {shippingData.fullName}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground block">
+                          Address
+                        </span>
+                        <span className="text-sm font-medium">
+                          {shippingData.street}, {shippingData.city},{" "}
+                          {shippingData.province} {shippingData.postalCode}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Phone
+                          </span>
+                          <span className="text-sm font-medium">
+                            {shippingData.phone}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Email
+                          </span>
+                          <span className="text-sm font-medium">
+                            {shippingData.email}
+                          </span>
+                        </div>
+                      </div>
+                      {shippingData.deliveryInstructions && (
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Instructions
+                          </span>
+                          <p className="text-xs mt-1 text-muted-foreground bg-muted/50 p-2 rounded">
+                            {shippingData.deliveryInstructions}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No shipping information available
+                    </div>
+                  )}
                 </div>
               </div>
 
