@@ -217,61 +217,96 @@ export default function OrderDetailsModal({
                       string | number | undefined
                     > = isProduct
                       ? {
-                          Family:
-                            actualItem.product?.productId?.family ||
-                            actualItem.product?.family ||
-                            "General",
+                          ...(actualItem.product?.productId?.family ||
+                          actualItem.product?.family
+                            ? {
+                                Family:
+                                  actualItem.product?.productId?.family ||
+                                  actualItem.product?.family,
+                              }
+                            : {}),
                           "Product Name":
                             actualItem.product?.productId?.productName ||
                             actualItem.product?.productName ||
                             "Custom Product",
-                          "Unit Size": actualItem.unitSize || "As Specified",
-                          "Customization Note":
-                            actualItem.product?.productId
-                              ?.unitSizeCustomizationNote ||
-                            actualItem.product?.unitSizeCustomizationNote ||
-                            "Standard Configuration",
-                          "Measure Unit":
-                            actualItem.product?.productId?.measureUnit ||
-                            actualItem.product?.measureUnit ||
-                            "Units",
-                          Reference:
-                            actualItem.selectedFeature?.reference || "Default",
-                          "Size 1":
-                            actualItem.selectedFeature?.size1 !== null &&
-                            actualItem.selectedFeature?.size1 !== undefined
-                              ? actualItem.selectedFeature.size1
-                              : "Standard",
-                          "Size 2":
-                            actualItem.selectedFeature?.size2 !== null &&
-                            actualItem.selectedFeature?.size2 !== undefined
-                              ? actualItem.selectedFeature.size2
-                              : "Not Applicable",
-                          Thickness:
-                            actualItem.selectedFeature?.thickness !== null &&
-                            actualItem.selectedFeature?.thickness !== undefined
-                              ? actualItem.selectedFeature.thickness
-                              : "Standard Profile",
-                          "Finish Quality":
-                            actualItem.selectedFeature?.finishQuality ||
-                            "Standard Finish",
-                          "Unit Sizes": actualItem.selectedFeature?.unitSizes
-                            ? actualItem.selectedFeature.unitSizes.join(", ")
-                            : "Custom Length",
-                          "Kgs per Unit":
-                            actualItem.selectedFeature?.kgsPerUnit ||
-                            "As Per Specification",
-                          "Miter Per Unit Price":
-                            actualItem.selectedFeature?.miterPerUnitPrice ||
-                            "Contact for Pricing",
-                          Range:
-                            actualItem.selectedFeature?.minRange !== null &&
-                            actualItem.selectedFeature?.maxRange !== null &&
-                            actualItem.selectedFeature?.minRange !==
-                              undefined &&
-                            actualItem.selectedFeature?.maxRange !== undefined
-                              ? `${actualItem.selectedFeature.minRange} - ${actualItem.selectedFeature.maxRange}`
-                              : actualItem.product?.range || "Fixed Size",
+                          ...(actualItem.unitSize
+                            ? { "Unit Size": actualItem.unitSize }
+                            : {}),
+                          ...(actualItem.product?.productId
+                            ?.unitSizeCustomizationNote ||
+                          actualItem.product?.unitSizeCustomizationNote
+                            ? {
+                                "Customization Note":
+                                  actualItem.product?.productId
+                                    ?.unitSizeCustomizationNote ||
+                                  actualItem.product?.unitSizeCustomizationNote,
+                              }
+                            : {}),
+                          ...(actualItem.product?.productId?.measureUnit ||
+                          actualItem.product?.measureUnit
+                            ? {
+                                "Measure Unit":
+                                  actualItem.product?.productId?.measureUnit ||
+                                  actualItem.product?.measureUnit,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.reference
+                            ? {
+                                Reference:
+                                  actualItem.selectedFeature?.reference,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.size1 !== null &&
+                          actualItem.selectedFeature?.size1 !== undefined
+                            ? { "Size 1": actualItem.selectedFeature.size1 }
+                            : {}),
+                          ...(actualItem.selectedFeature?.size2 !== null &&
+                          actualItem.selectedFeature?.size2 !== undefined
+                            ? { "Size 2": actualItem.selectedFeature.size2 }
+                            : {}),
+                          ...(actualItem.selectedFeature?.thickness !== null &&
+                          actualItem.selectedFeature?.thickness !== undefined
+                            ? {
+                                Thickness: actualItem.selectedFeature.thickness,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.finishQuality
+                            ? {
+                                "Finish Quality":
+                                  actualItem.selectedFeature?.finishQuality,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.unitSizes &&
+                          actualItem.selectedFeature?.unitSizes.length > 0
+                            ? {
+                                "Unit Sizes":
+                                  actualItem.selectedFeature.unitSizes.join(
+                                    ", ",
+                                  ),
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.kgsPerUnit
+                            ? {
+                                "Kgs per Unit":
+                                  actualItem.selectedFeature?.kgsPerUnit,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.miterPerUnitPrice
+                            ? {
+                                "Miter Per Unit Price":
+                                  actualItem.selectedFeature?.miterPerUnitPrice,
+                              }
+                            : {}),
+                          ...(actualItem.selectedFeature?.minRange !== null &&
+                          actualItem.selectedFeature?.maxRange !== null &&
+                          actualItem.selectedFeature?.minRange !== undefined &&
+                          actualItem.selectedFeature?.maxRange !== undefined
+                            ? {
+                                Range: `${actualItem.selectedFeature.minRange} - ${actualItem.selectedFeature.maxRange}`,
+                              }
+                            : actualItem.product?.range
+                              ? { Range: actualItem.product.range }
+                              : {}),
                           Quantity: actualItem.quantity || 1,
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
