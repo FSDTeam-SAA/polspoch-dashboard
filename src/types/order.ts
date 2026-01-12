@@ -56,6 +56,8 @@ export interface ProductDetails {
   maxRange: number | null;
   range?: number;
   unitSizeCustomizationNote: string;
+  unitSize?: number;
+  selectedFeature?: SelectedFeature;
   createdAt: string;
   updatedAt: string;
   productImage: ProductImage[];

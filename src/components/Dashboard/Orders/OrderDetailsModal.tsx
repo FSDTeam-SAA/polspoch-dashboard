@@ -229,8 +229,15 @@ export default function OrderDetailsModal({
                             actualItem.product?.productId?.productName ||
                             actualItem.product?.productName ||
                             "Custom Product",
-                          ...(actualItem.unitSize
-                            ? { "Unit Size": actualItem.unitSize }
+                          ...(actualItem.product?.unitSize !== null &&
+                          actualItem.product?.unitSize !== undefined
+                            ? {
+                                "Unit Size": `${actualItem.product?.unitSize} ${
+                                  actualItem.product?.productId?.measureUnit ||
+                                  actualItem.product?.measureUnit ||
+                                  ""
+                                }`,
+                              }
                             : {}),
                           ...(actualItem.product?.productId
                             ?.unitSizeCustomizationNote ||
@@ -242,71 +249,95 @@ export default function OrderDetailsModal({
                                   actualItem.product?.unitSizeCustomizationNote,
                               }
                             : {}),
-                          ...(actualItem.product?.productId?.measureUnit ||
-                          actualItem.product?.measureUnit
+                          ...(actualItem.product?.productId?.availabilityNote
                             ? {
-                                "Measure Unit":
-                                  actualItem.product?.productId?.measureUnit ||
-                                  actualItem.product?.measureUnit,
+                                Availability:
+                                  actualItem.product.productId.availabilityNote,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.reference
+                          ...(actualItem.product?.selectedFeature?.reference
                             ? {
                                 Reference:
-                                  actualItem.selectedFeature?.reference,
+                                  actualItem.product.selectedFeature.reference,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.size1 !== null &&
-                          actualItem.selectedFeature?.size1 !== undefined
-                            ? { "Size 1": actualItem.selectedFeature.size1 }
-                            : {}),
-                          ...(actualItem.selectedFeature?.size2 !== null &&
-                          actualItem.selectedFeature?.size2 !== undefined
-                            ? { "Size 2": actualItem.selectedFeature.size2 }
-                            : {}),
-                          ...(actualItem.selectedFeature?.thickness !== null &&
-                          actualItem.selectedFeature?.thickness !== undefined
+                          ...(actualItem.product?.selectedFeature?.size1 !==
+                            null &&
+                          actualItem.product?.selectedFeature?.size1 !==
+                            undefined
                             ? {
-                                Thickness: actualItem.selectedFeature.thickness,
+                                Dimensions: `${actualItem.product.selectedFeature.size1}${
+                                  actualItem.product.selectedFeature.size2 !==
+                                    null &&
+                                  actualItem.product.selectedFeature.size2 !==
+                                    undefined
+                                    ? ` x ${actualItem.product.selectedFeature.size2}`
+                                    : ""
+                                }mm`,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.finishQuality
+                          ...(actualItem.product?.selectedFeature?.thickness !==
+                            null &&
+                          actualItem.product?.selectedFeature?.thickness !==
+                            undefined
+                            ? {
+                                Thickness: `${actualItem.product.selectedFeature.thickness}mm`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.finishQuality
                             ? {
                                 "Finish Quality":
-                                  actualItem.selectedFeature?.finishQuality,
+                                  actualItem.product.selectedFeature
+                                    .finishQuality,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.unitSizes &&
-                          actualItem.selectedFeature?.unitSizes.length > 0
+                          ...(actualItem.product?.selectedFeature?.unitSizes &&
+                          actualItem.product?.selectedFeature?.unitSizes
+                            .length > 0
                             ? {
                                 "Unit Sizes":
-                                  actualItem.selectedFeature.unitSizes.join(
+                                  actualItem.product.selectedFeature.unitSizes.join(
                                     ", ",
                                   ),
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.kgsPerUnit
+                          ...(actualItem.product?.selectedFeature
+                            ?.kgsPerUnit !== null &&
+                          actualItem.product?.selectedFeature?.kgsPerUnit !==
+                            undefined
                             ? {
-                                "Kgs per Unit":
-                                  actualItem.selectedFeature?.kgsPerUnit,
+                                "Kgs per Unit": `${actualItem.product.selectedFeature.kgsPerUnit}kg`,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.miterPerUnitPrice
+                          ...(actualItem.product?.selectedFeature
+                            ?.miterPerUnitPrice !== null &&
+                          actualItem.product?.selectedFeature
+                            ?.miterPerUnitPrice !== undefined
                             ? {
-                                "Miter Per Unit Price":
-                                  actualItem.selectedFeature?.miterPerUnitPrice,
+                                "Miter Per Unit Price": `€${actualItem.product.selectedFeature.miterPerUnitPrice}`,
                               }
                             : {}),
-                          ...(actualItem.selectedFeature?.minRange !== null &&
-                          actualItem.selectedFeature?.maxRange !== null &&
-                          actualItem.selectedFeature?.minRange !== undefined &&
-                          actualItem.selectedFeature?.maxRange !== undefined
+                          ...(actualItem.product?.selectedFeature?.minRange !==
+                            null &&
+                          actualItem.product?.selectedFeature?.minRange !==
+                            undefined &&
+                          actualItem.product?.selectedFeature?.maxRange !==
+                            null &&
+                          actualItem.product?.selectedFeature?.maxRange !==
+                            undefined
                             ? {
-                                Range: `${actualItem.selectedFeature.minRange} - ${actualItem.selectedFeature.maxRange}`,
+                                Range: `${actualItem.product.selectedFeature.minRange} - ${actualItem.product.selectedFeature.maxRange}mm`,
                               }
-                            : actualItem.product?.range
-                              ? { Range: actualItem.product.range }
-                              : {}),
+                            : actualItem.product?.selectedFeature?.maxRange !==
+                                  null &&
+                                actualItem.product?.selectedFeature
+                                  ?.maxRange !== undefined
+                              ? {
+                                  Range: `Up to ${actualItem.product.selectedFeature.maxRange}mm`,
+                                }
+                              : actualItem.product?.range
+                                ? { Range: actualItem.product.range }
+                                : {}),
                           Quantity: actualItem.quantity || 1,
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
