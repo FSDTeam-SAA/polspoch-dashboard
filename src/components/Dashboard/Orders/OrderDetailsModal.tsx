@@ -11,7 +11,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Eye, ChevronLeft, Package, Settings } from "lucide-react";
+import { Eye, ChevronLeft, Package, Settings, MapPin } from "lucide-react";
+import { useGetShippingSingle } from "@/lib/hooks/useShippingSingleGet";
+
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -24,6 +26,8 @@ export default function OrderDetailsModal({
   order,
   filterType,
 }: OrderDetailsModalProps) {
+  const { data: shippingData, isLoading: shippingLoading } =
+    useGetShippingSingle(order._id);
   const allCartItems = order.cartItems || [];
 
   // Filter items based on the tab type
@@ -72,7 +76,11 @@ export default function OrderDetailsModal({
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => console.log("Selected Order Data:", order)}
+          >
             <Eye className="h-4 w-4" />
             <span className="sr-only">View Details</span>
           </Button>
@@ -193,6 +201,69 @@ export default function OrderDetailsModal({
                     )}
                   </div>
                 </div>
+
+                <div className="rounded-lg border p-4 space-y-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4" /> Shipping Information
+                  </h3>
+                  {shippingLoading ? (
+                    <div className="text-sm text-muted-foreground animate-pulse">
+                      Loading shipping details...
+                    </div>
+                  ) : shippingData ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <span className="text-xs text-muted-foreground block">
+                          Receiver
+                        </span>
+                        <span className="text-sm font-medium">
+                          {shippingData.fullName}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground block">
+                          Address
+                        </span>
+                        <span className="text-sm font-medium">
+                          {shippingData.street}, {shippingData.city},{" "}
+                          {shippingData.province} {shippingData.postalCode}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Phone
+                          </span>
+                          <span className="text-sm font-medium">
+                            {shippingData.phone}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Email
+                          </span>
+                          <span className="text-sm font-medium">
+                            {shippingData.email}
+                          </span>
+                        </div>
+                      </div>
+                      {shippingData.deliveryInstructions && (
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Instructions
+                          </span>
+                          <p className="text-xs mt-1 text-muted-foreground bg-muted/50 p-2 rounded">
+                            {shippingData.deliveryInstructions}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      No shipping information available
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Right Column: Order Items */}
@@ -217,61 +288,127 @@ export default function OrderDetailsModal({
                       string | number | undefined
                     > = isProduct
                       ? {
-                          Family:
-                            actualItem.product?.productId?.family ||
-                            actualItem.product?.family ||
-                            "General",
+                          ...(actualItem.product?.productId?.family ||
+                          actualItem.product?.family
+                            ? {
+                                Family:
+                                  actualItem.product?.productId?.family ||
+                                  actualItem.product?.family,
+                              }
+                            : {}),
                           "Product Name":
                             actualItem.product?.productId?.productName ||
                             actualItem.product?.productName ||
                             "Custom Product",
-                          "Unit Size": actualItem.unitSize || "As Specified",
-                          "Customization Note":
-                            actualItem.product?.productId
-                              ?.unitSizeCustomizationNote ||
-                            actualItem.product?.unitSizeCustomizationNote ||
-                            "Standard Configuration",
-                          "Measure Unit":
-                            actualItem.product?.productId?.measureUnit ||
-                            actualItem.product?.measureUnit ||
-                            "Units",
-                          Reference:
-                            actualItem.selectedFeature?.reference || "Default",
-                          "Size 1":
-                            actualItem.selectedFeature?.size1 !== null &&
-                            actualItem.selectedFeature?.size1 !== undefined
-                              ? actualItem.selectedFeature.size1
-                              : "Standard",
-                          "Size 2":
-                            actualItem.selectedFeature?.size2 !== null &&
-                            actualItem.selectedFeature?.size2 !== undefined
-                              ? actualItem.selectedFeature.size2
-                              : "Not Applicable",
-                          Thickness:
-                            actualItem.selectedFeature?.thickness !== null &&
-                            actualItem.selectedFeature?.thickness !== undefined
-                              ? actualItem.selectedFeature.thickness
-                              : "Standard Profile",
-                          "Finish Quality":
-                            actualItem.selectedFeature?.finishQuality ||
-                            "Standard Finish",
-                          "Unit Sizes": actualItem.selectedFeature?.unitSizes
-                            ? actualItem.selectedFeature.unitSizes.join(", ")
-                            : "Custom Length",
-                          "Kgs per Unit":
-                            actualItem.selectedFeature?.kgsPerUnit ||
-                            "As Per Specification",
-                          "Miter Per Unit Price":
-                            actualItem.selectedFeature?.miterPerUnitPrice ||
-                            "Contact for Pricing",
-                          Range:
-                            actualItem.selectedFeature?.minRange !== null &&
-                            actualItem.selectedFeature?.maxRange !== null &&
-                            actualItem.selectedFeature?.minRange !==
-                              undefined &&
-                            actualItem.selectedFeature?.maxRange !== undefined
-                              ? `${actualItem.selectedFeature.minRange} - ${actualItem.selectedFeature.maxRange}`
-                              : actualItem.product?.range || "Fixed Size",
+                          ...(actualItem.product?.unitSize !== null &&
+                          actualItem.product?.unitSize !== undefined
+                            ? {
+                                "Unit Size": `${actualItem.product?.unitSize} ${
+                                  actualItem.product?.productId?.measureUnit ||
+                                  actualItem.product?.measureUnit ||
+                                  ""
+                                }`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.productId
+                            ?.unitSizeCustomizationNote ||
+                          actualItem.product?.unitSizeCustomizationNote
+                            ? {
+                                "Customization Note":
+                                  actualItem.product?.productId
+                                    ?.unitSizeCustomizationNote ||
+                                  actualItem.product?.unitSizeCustomizationNote,
+                              }
+                            : {}),
+                          ...(actualItem.product?.productId?.availabilityNote
+                            ? {
+                                Availability:
+                                  actualItem.product.productId.availabilityNote,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.reference
+                            ? {
+                                Reference:
+                                  actualItem.product.selectedFeature.reference,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.size1 !==
+                            null &&
+                          actualItem.product?.selectedFeature?.size1 !==
+                            undefined
+                            ? {
+                                Dimensions: `${actualItem.product.selectedFeature.size1}${
+                                  actualItem.product.selectedFeature.size2 !==
+                                    null &&
+                                  actualItem.product.selectedFeature.size2 !==
+                                    undefined
+                                    ? ` x ${actualItem.product.selectedFeature.size2}`
+                                    : ""
+                                }mm`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.thickness !==
+                            null &&
+                          actualItem.product?.selectedFeature?.thickness !==
+                            undefined
+                            ? {
+                                Thickness: `${actualItem.product.selectedFeature.thickness}mm`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.finishQuality
+                            ? {
+                                "Finish Quality":
+                                  actualItem.product.selectedFeature
+                                    .finishQuality,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.unitSizes &&
+                          actualItem.product?.selectedFeature?.unitSizes
+                            .length > 0
+                            ? {
+                                "Unit Sizes":
+                                  actualItem.product.selectedFeature.unitSizes.join(
+                                    ", ",
+                                  ),
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature
+                            ?.kgsPerUnit !== null &&
+                          actualItem.product?.selectedFeature?.kgsPerUnit !==
+                            undefined
+                            ? {
+                                "Kgs per Unit": `${actualItem.product.selectedFeature.kgsPerUnit}kg`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature
+                            ?.miterPerUnitPrice !== null &&
+                          actualItem.product?.selectedFeature
+                            ?.miterPerUnitPrice !== undefined
+                            ? {
+                                "Miter Per Unit Price": `€${actualItem.product.selectedFeature.miterPerUnitPrice}`,
+                              }
+                            : {}),
+                          ...(actualItem.product?.selectedFeature?.minRange !==
+                            null &&
+                          actualItem.product?.selectedFeature?.minRange !==
+                            undefined &&
+                          actualItem.product?.selectedFeature?.maxRange !==
+                            null &&
+                          actualItem.product?.selectedFeature?.maxRange !==
+                            undefined
+                            ? {
+                                Range: `${actualItem.product.selectedFeature.minRange} - ${actualItem.product.selectedFeature.maxRange}mm`,
+                              }
+                            : actualItem.product?.selectedFeature?.maxRange !==
+                                  null &&
+                                actualItem.product?.selectedFeature
+                                  ?.maxRange !== undefined
+                              ? {
+                                  Range: `Up to ${actualItem.product.selectedFeature.maxRange}mm`,
+                                }
+                              : actualItem.product?.range
+                                ? { Range: actualItem.product.range }
+                                : {}),
                           Quantity: actualItem.quantity || 1,
                           "Total Amount": actualItem.totalAmount
                             ? `€${actualItem.totalAmount.toLocaleString()}`
