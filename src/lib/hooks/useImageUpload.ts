@@ -12,7 +12,11 @@ interface UseImageUploadReturn {
   removeImageFile: (id: string) => void;
   removeExistingImage: (publicKey: string) => Promise<void>;
   clearAll: () => void;
-  getAllImageData: () => { files: File[]; existingUrls: string[] };
+  getAllImageData: () => {
+    files: File[];
+    existingUrls: string[];
+    existingImages: ProductImage[];
+  };
 }
 
 export function useImageUpload(
@@ -66,20 +70,10 @@ export function useImageUpload(
     });
   }, []);
 
-  const removeExistingImage = useCallback(async (_publicKey: string) => {
-    // try {
-    //   setIsUploading(true);
-    //   await productService.deleteImage(publicKey);
-    //   setExistingImages((prev) =>
-    //     prev.filter((img) => img.publickey !== publicKey)
-    //   );
-    //   toast.success("Image deleted successfully");
-    // } catch (error) {
-    //   console.error("Error deleting image:", error);
-    //   toast.error("Failed to delete image");
-    // } finally {
-    //   setIsUploading(false);
-    // }
+  const removeExistingImage = useCallback(async (publicKey: string) => {
+    setExistingImages((prev) =>
+      prev.filter((img) => img.publickey !== publicKey),
+    );
   }, []);
 
   const clearAll = useCallback(() => {
@@ -91,6 +85,7 @@ export function useImageUpload(
     return {
       files: imageFiles.map((img) => img.file),
       existingUrls: existingImages.map((img) => img.url),
+      existingImages: existingImages, // Return the full objects for the form
     };
   }, [imageFiles, existingImages]);
 
