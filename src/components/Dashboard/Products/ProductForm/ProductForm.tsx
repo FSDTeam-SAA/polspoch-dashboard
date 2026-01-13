@@ -96,7 +96,7 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
   }, [productData, mode, reset]);
 
   const onSubmit = handleFormSubmit((data: ProductFormValues) => {
-    const { files } = getAllImageData();
+    const { files, existingImages } = getAllImageData();
     // For logging verification as requested
     // console.log("Form Data:", data);
     // console.log("Image Files to Upload:", files);
@@ -107,7 +107,8 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
         size: files[0].size,
       });
     }
-    handleSubmit(data, files);
+    // Pass existingImages (as objects or keys, handled by useProductForm)
+    handleSubmit(data, files, existingImages);
   });
 
   if (isLoadingProduct) {
