@@ -3,7 +3,7 @@ import { productService } from "../services/productService";
 import { Product } from "../types/product";
 import { toast } from "sonner";
 
-// use products
+// get all products
 export function useProducts() {
   return useQuery<Product[]>({
     queryKey: ["products"],

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { productFormSchema, ProductFormValues } from "../schemas/productSchema";
 import { productService } from "../services/productService";
+import { ProductImage } from "../types/product";
 
 interface UseProductFormProps {
   mode: "add" | "edit";
@@ -98,7 +99,11 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
     },
   });
 
-  const handleSubmit = async (data: ProductFormValues, imageFiles: File[]) => {
+  const handleSubmit = async (
+    data: ProductFormValues,
+    imageFiles: File[],
+    existingImages: ProductImage[] = [],
+  ) => {
     const formData = new FormData();
 
     // Append product data
@@ -118,6 +123,14 @@ export function useProductForm({ mode, productId }: UseProductFormProps) {
 
     // Append features as JSON string
     formData.append("features", JSON.stringify(data.features));
+
+    // Append existing images logic (sending list of kept images)
+    if (existingImages && existingImages.length > 0) {
+      formData.append("existingImages", JSON.stringify(existingImages));
+    } else {
+      // If no existing images, send empty array to signal all should be removed if any existed
+      formData.append("existingImages", JSON.stringify([]));
+    }
 
     // Append images
     imageFiles.forEach((file) => {
