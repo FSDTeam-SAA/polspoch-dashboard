@@ -220,13 +220,24 @@ export default function OrderDetailsModal({
                           {shippingData.fullName}
                         </span>
                       </div>
+                      {shippingData.company && (
+                        <div>
+                          <span className="text-xs text-muted-foreground block">
+                            Company
+                          </span>
+                          <span className="text-sm font-medium">
+                            {shippingData.company}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <span className="text-xs text-muted-foreground block">
                           Address
                         </span>
                         <span className="text-sm font-medium">
                           {shippingData.street}, {shippingData.city},{" "}
-                          {shippingData.province} {shippingData.postalCode}
+                          {shippingData.province} {shippingData.postalCode},{" "}
+                          {shippingData.country}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
