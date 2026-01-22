@@ -1,19 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { productService } from "../services/productService";
-import { Product } from "../types/product";
+import { productService, ProductsResponse } from "../services/productService";
+
 import { toast } from "sonner";
 
 // get all products
-export function useProducts() {
-  return useQuery<Product[]>({
-    queryKey: ["products"],
+export function useProducts(page: number, limit: number, search?: string) {
+  return useQuery<ProductsResponse>({
+    queryKey: ["products", page, limit, search],
     queryFn: async () => {
-      const response = await productService.getAllProducts();
-      // Extract the data array from the API response
-      return response.data || [];
+      const response = await productService.getAllProducts(page, limit, search);
+      // Return the full response to access metadata like totalPages
+      return response;
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+    placeholderData: (keepPreviousData) => keepPreviousData,
   });
 }
 
