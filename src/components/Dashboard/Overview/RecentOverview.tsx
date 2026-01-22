@@ -11,7 +11,10 @@ import { Loader2 } from "lucide-react";
 
 export default function RecentOverview() {
   const { data: orders, isLoading: isLoadingOrders } = useOrders();
-  const { data: productsData, isLoading: isLoadingProducts } = useProducts();
+  const { data: productsData, isLoading: isLoadingProducts } = useProducts(
+    1,
+    10,
+  );
 
   const statusBadge = (status: string) => {
     // Normalize status for comparison logic, but display original text
@@ -42,7 +45,7 @@ export default function RecentOverview() {
 
   // Slice to show only recent items (e.g., top 5)
   const recentOrders = orders?.slice(0, 5) || [];
-  const recentProducts = productsData?.slice(0, 5) || [];
+  const recentProducts = productsData?.data?.slice(0, 5) || [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
