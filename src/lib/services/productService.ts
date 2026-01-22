@@ -3,20 +3,37 @@
 import axiosInstance from "../instance/axios-instance";
 import { Product } from "../types/product";
 
-interface ProductsResponse {
+export interface ProductsResponse {
   success: boolean;
   data: Product[];
+  meta?: {
+    totalPages: number;
+    totalItems: number;
+    currentPage: number;
+  };
+  // Fallback fields for compatibility
+  totalPages?: number;
+  totalItems?: number;
+  total?: number;
+  currentPage?: number;
 }
 
 class ProductService {
   private baseUrl = "/product";
 
-  /**
-   * get all products
-   */
-  async getAllProducts(): Promise<ProductsResponse> {
+  async getAllProducts(
+    page: number,
+    limit: number,
+    search?: string,
+  ): Promise<ProductsResponse> {
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) query.append("search", search);
+
     const response = await axiosInstance.get<ProductsResponse>(
-      `${this.baseUrl}`,
+      `${this.baseUrl}?${query.toString()}`,
     );
     return response.data;
   }

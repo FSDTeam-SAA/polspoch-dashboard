@@ -1,34 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import {
-  Plus,
-  Search,
-  Package,
-  Eye,
-  Edit,
-  Trash2,
-  Loader2,
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useProducts, useDeleteProduct } from "@/lib/hooks/useProduct";
-import { Product } from "@/lib/types/product";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -36,59 +11,39 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// Hooks
+import { useProductDashboard } from "./hooks/useProductDashboard";
+
+// Components
+import { ProductTable } from "./components/ProductTable";
+import { ProductPagination } from "./components/ProductPagination";
+import { ProductDialogs } from "./components/ProductDialogs";
 
 export default function Products() {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const { data: products, isLoading, error } = useProducts();
-  const deleteMutation = useDeleteProduct();
-
-  const handleViewProduct = (product: Product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteClick = (product: Product) => {
-    setProductToDelete(product);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (productToDelete) {
-      await deleteMutation.mutateAsync(productToDelete._id);
-      setIsDeleteModalOpen(false);
-      setProductToDelete(null);
-    }
-  };
-
-  const filteredProducts = products?.filter((product) =>
-    (product?.productName || "")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()),
-  );
-
-  // Pagination Logic
-  const totalPages = Math.ceil((filteredProducts?.length || 0) / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = filteredProducts?.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const {
+    searchTerm,
+    setSearchTerm,
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    products,
+    totalPages,
+    isLoading,
+    isFetching,
+    error,
+    selectedProduct,
+    isModalOpen,
+    setIsModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    productToDelete,
+    handleViewProduct,
+    handleDeleteClick,
+    confirmDelete,
+    deletePending,
+  } = useProductDashboard();
 
   if (isLoading) {
     return (
@@ -118,7 +73,7 @@ export default function Products() {
           </p>
         </div>
         <Link href="/products/add-product">
-          <Button className="shadow-sm cursor-pointer bg-[#7E1800] hover:bg-[#7E1800]">
+          <Button className="shadow-sm cursor-pointer bg-[#7E1800] hover:bg-[#8B2000]">
             <Plus className="mr-2 h-4 w-4" />
             Add Product
           </Button>
@@ -142,434 +97,39 @@ export default function Products() {
                 placeholder="Search products..."
                 className="pl-8"
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="w-[80px]">Image</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Family</TableHead>
-                  <TableHead>Features</TableHead>
-                  <TableHead>Range</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="t">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedProducts && paginatedProducts.length > 0 ? (
-                  paginatedProducts.map((product) => (
-                    <TableRow key={product?._id} className="group">
-                      <TableCell>
-                        <div className="relative h-12 w-12 rounded-md overflow-hidden border bg-muted">
-                          {product?.productImage &&
-                          product.productImage.length > 0 ? (
-                            <Image
-                              src={
-                                product.productImage[0]?.url ||
-                                "/placeholder.jpg"
-                              }
-                              alt={product.productName || "Product"}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full w-full text-muted-foreground">
-                              <Package className="h-5 w-5" />
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>
-                            {product?.productName || "Unnamed Product"}
-                          </span>
-                          {product?.unitSizeCustomizationNote && (
-                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                              {product.unitSizeCustomizationNote}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {product?.family
-                          ? typeof product.family === "object"
-                            ? product.family?.familyName || "Unknown Family"
-                            : product.family
-                          : "Unknown Family"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="font-normal">
-                          {product?.features?.length || 0} variant
-                          {(product?.features?.length || 0) !== 1 ? "s" : ""}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {product?.features && product.features.length > 0 ? (
-                            <>
-                              {Math.min(
-                                ...(product.features.map(
-                                  (f) => f?.minRange || 0,
-                                ) as number[]),
-                              )}
-                              -
-                              {Math.max(
-                                ...(product.features.map(
-                                  (f) => f?.maxRange || 0,
-                                ) as number[]),
-                              )}
-                            </>
-                          ) : (
-                            "N/A"
-                          )}{" "}
-                          <span className="text-muted-foreground">
-                            {product?.measureUnit || ""}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            product?.availabilityNote?.toLowerCase() ===
-                            "in stock"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className={
-                            product?.availabilityNote?.toLowerCase() ===
-                            "in stock"
-                              ? "bg-green-500/15 text-green-700 hover:bg-green-500/25 border-green-200"
-                              : "bg-yellow-500/15 text-yellow-700 hover:bg-yellow-500/25 border-yellow-200"
-                          }
-                        >
-                          {product?.availabilityNote || "Unknown"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 cursor-pointer"
-                            onClick={() => handleViewProduct(product)}
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Link href={`/products/edit/${product._id}`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 cursor-pointer"
-                              title="Edit Product"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                            onClick={() => handleDeleteClick(product)}
-                            title="Delete Product"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No products found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <ProductTable
+            products={products}
+            onView={handleViewProduct}
+            onDelete={handleDeleteClick}
+          />
 
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between space-x-2 py-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1}-
-              {Math.min(
-                startIndex + itemsPerPage,
-                filteredProducts?.length || 0,
-              )}{" "}
-              of {filteredProducts?.length || 0} products
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-              >
-                <span className="sr-only">Go to first page</span>
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center justify-center text-sm font-medium">
-                Page {currentPage} of {totalPages || 1}
-              </div>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages || totalPages === 0}
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages || totalPages === 0}
-              >
-                <span className="sr-only">Go to last page</span>
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <ProductPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            setCurrentPage={setCurrentPage}
+            isFetching={isFetching}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 gap-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle>Product Details</DialogTitle>
-            <DialogDescription>
-              Detailed information about{" "}
-              {selectedProduct?.productName || "this product"}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="flex flex-col">
-              {/* Product Images Carousel/Grid */}
-              <div className="px-6 pb-6">
-                {selectedProduct.productImage &&
-                selectedProduct.productImage.length > 0 ? (
-                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                    {selectedProduct.productImage.map((img) => (
-                      <div
-                        key={img?._id}
-                        className="relative h-48 w-48 shrink-0 rounded-lg overflow-hidden border bg-muted"
-                      >
-                        <Image
-                          src={img?.url || "/placeholder.jpg"}
-                          alt={selectedProduct.productName || "Product image"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-48 w-full rounded-lg border bg-muted flex items-center justify-center text-muted-foreground">
-                    <Package className="h-12 w-12 opacity-50" />
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6 pt-0 space-y-6">
-                {/* Key Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Family
-                    </p>
-                    <p className="font-semibold">
-                      {selectedProduct?.family
-                        ? typeof selectedProduct.family === "object"
-                          ? selectedProduct.family?.familyName || "Unknown"
-                          : selectedProduct.family
-                        : "Unknown"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Range
-                    </p>
-                    <p className="font-semibold">
-                      {selectedProduct.features &&
-                      selectedProduct.features.length > 0 ? (
-                        <>
-                          {Math.min(
-                            ...(selectedProduct.features.map(
-                              (f) => f?.minRange || 0,
-                            ) as number[]),
-                          )}
-                          -
-                          {Math.max(
-                            ...(selectedProduct.features.map(
-                              (f) => f?.maxRange || 0,
-                            ) as number[]),
-                          )}
-                        </>
-                      ) : (
-                        "N/A"
-                      )}{" "}
-                      {selectedProduct.measureUnit || ""}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Weight
-                    </p>
-                    <p className="font-semibold">
-                      {selectedProduct.features &&
-                      selectedProduct.features.length > 0
-                        ? `${selectedProduct.features[0]?.kgsPerUnit || "-"} kg/unit` // Showing first variant's weight or maybe range if needed
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Status
-                    </p>
-                    <Badge
-                      variant={
-                        selectedProduct.availabilityNote?.toLowerCase() ===
-                        "in stock"
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {selectedProduct.availabilityNote || "Unknown"}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Customization Note */}
-                {selectedProduct.unitSizeCustomizationNote && (
-                  <div className="rounded-lg bg-muted/50 p-4">
-                    <p className="text-sm font-medium mb-1">
-                      Customization Note
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedProduct.unitSizeCustomizationNote}
-                    </p>
-                  </div>
-                )}
-
-                {/* Features List */}
-                {selectedProduct.features &&
-                  selectedProduct.features.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-semibold">
-                        Features & Variants
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedProduct.features.map((feature, index) => (
-                          <Card
-                            key={feature?._id || index}
-                            className="shadow-none border bg-card"
-                          >
-                            <CardContent className="p-3 text-sm space-y-2">
-                              <div className="flex justify-between items-center border-b pb-2">
-                                <span className="font-medium">
-                                  {feature?.reference || "N/A"}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                  {feature?.finishQuality || "N/A"}
-                                </Badge>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-                                <div>
-                                  Size: {feature?.size1 || 0} x{" "}
-                                  {feature?.size2 || 0}
-                                </div>
-                                <div>
-                                  Thickness: {feature?.thickness || 0}mm
-                                </div>
-                                {feature?.miterPerUnitPrice && (
-                                  <div className="col-span-2 text-foreground font-medium">
-                                    ${feature.miterPerUnitPrice}/unit
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              Confirm Deletion
-            </DialogTitle>
-            <DialogDescription className="py-2">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                {productToDelete?.productName || "this product"}
-              </span>
-              ? This action cannot be undone and will permanently remove the
-              product from your catalog.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteModalOpen(false)}
-              disabled={deleteMutation.isPending}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteMutation.isPending}
-              className="cursor-pointer"
-            >
-              {deleteMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete Product"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProductDialogs
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        selectedProduct={selectedProduct}
+        isDeleteModalOpen={isDeleteModalOpen}
+        setIsDeleteModalOpen={setIsDeleteModalOpen}
+        productToDelete={productToDelete}
+        confirmDelete={confirmDelete}
+        deletePending={deletePending}
+      />
     </div>
   );
 }
