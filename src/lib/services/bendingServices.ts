@@ -22,7 +22,7 @@ class BendingServices {
     input: {
       templateId: string;
       shapeName: string;
-      cuts: number;
+      bend: number;
       materials: {
         material: string;
         thickness: number[];
@@ -35,7 +35,7 @@ class BendingServices {
     const formData = new FormData();
     formData.append("templateId", input.templateId);
     formData.append("shapeName", input.shapeName);
-    formData.append("cuts", String(input.cuts));
+    formData.append("bend", String(input.bend));
 
     // Append array fields as stringified JSON
     formData.append("materials", JSON.stringify(input.materials));
@@ -62,7 +62,7 @@ class BendingServices {
     input: {
       templateId: string;
       shapeName: string;
-      cuts: number;
+      bend: number;
       materials: {
         material: string;
         thickness: number[];
@@ -75,7 +75,7 @@ class BendingServices {
     const formData = new FormData();
     formData.append("templateId", input.templateId);
     formData.append("shapeName", input.shapeName);
-    formData.append("cuts", String(input.cuts));
+    formData.append("bend", String(input.bend));
 
     // Append array fields as stringified JSON
     formData.append("materials", JSON.stringify(input.materials));
