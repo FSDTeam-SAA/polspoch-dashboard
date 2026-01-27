@@ -70,6 +70,7 @@ export interface ServiceItem {
   dimensions: ShapeDimension[];
   image?: string;
   cuts?: number;
+  bend?: number;
   rawMaterials?: CuttingMaterial[];
 }
 
@@ -166,7 +167,7 @@ export default function Services() {
         title: t.shapeName,
         description: "Bending template specification",
         image: t.imageUrl,
-        cuts: t.cuts,
+        bend: t.bend,
         specs: {
           material: t.materials.map((m) => m.material),
           thickness: Array.from(
