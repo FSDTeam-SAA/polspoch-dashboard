@@ -34,7 +34,7 @@ interface AxiosErrorResponse {
 interface CreateBendingFormValues {
   templateId: string;
   shapeName: string;
-  cuts: number;
+  bend: number;
   materials: {
     material: string;
     thickness: { value: number }[];
@@ -56,7 +56,7 @@ export function CreateBendingTemplateDialog({
       defaultValues: {
         templateId: "",
         shapeName: "",
-        cuts: 0,
+        bend: 0,
         materials: [{ material: "", thickness: [{ value: 0 }] }],
         dimensions: [
           { key: "A", label: "Length A", minRange: 0, maxRange: 0, unit: "MM" },
@@ -112,7 +112,7 @@ export function CreateBendingTemplateDialog({
     const payload = {
       templateId: data.templateId,
       shapeName: data.shapeName,
-      cuts: data.cuts,
+      bend: data.bend,
       materials: data.materials.map((m) => ({
         material: m.material,
         thickness: m.thickness.map((t) => t.value),
@@ -190,20 +190,20 @@ export function CreateBendingTemplateDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cuts">Bends</Label>
+              <Label htmlFor="bend">Bends</Label>
               <Input
-                id="cuts"
+                id="bend"
                 type="number"
                 placeholder="e.g. 2"
-                {...register("cuts", {
-                  required: "Cuts is required",
+                {...register("bend", {
+                  required: "Bends is required",
                   valueAsNumber: true,
                   min: { value: 0, message: "Must be positive" },
                 })}
               />
-              {formState.errors.cuts && (
+              {formState.errors.bend && (
                 <p className="text-destructive text-xs">
-                  {formState.errors.cuts.message}
+                  {formState.errors.bend.message}
                 </p>
               )}
             </div>
