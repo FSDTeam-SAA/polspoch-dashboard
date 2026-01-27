@@ -32,7 +32,7 @@ export function useUpdateBendingTemplate() {
     mutationFn: (input: {
       templateId: string;
       shapeName: string;
-      cuts: number;
+      bend: number;
       materials: {
         material: string;
         thickness: number[];
@@ -53,7 +53,7 @@ export function useCreateBendingTemplate() {
     mutationFn: (input: {
       templateId: string;
       shapeName: string;
-      cuts: number;
+      bend: number;
       materials: {
         material: string;
         thickness: number[];

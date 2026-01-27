@@ -34,7 +34,7 @@ interface BendingDimensionInput {
 interface EditBendingFormValues {
   templateId: string;
   shapeName: string;
-  cuts: number;
+  bend: number;
   materials: {
     material: string;
     thickness: { value: number }[];
@@ -61,7 +61,7 @@ export function EditBendingDialog({
       defaultValues: {
         templateId: "",
         shapeName: "",
-        cuts: 0,
+        bend: 0,
         materials: [{ material: "", thickness: [{ value: 0 }] }],
         dimensions: [
           { key: "A", label: "Length A", minRange: 0, maxRange: 0, unit: "MM" },
@@ -99,7 +99,7 @@ export function EditBendingDialog({
       reset({
         templateId: service.templateId || "",
         shapeName: service.shepName,
-        cuts: service.cuts || 0,
+        bend: service.bend || 0,
         materials: Array.isArray(materialsToReset)
           ? (materialsToReset as (string | BendingMaterial)[]).map((m) => ({
               material: typeof m === "string" ? m : m.material || "",
@@ -144,7 +144,7 @@ export function EditBendingDialog({
       await updateTemplateMutation.mutateAsync({
         templateId: data.templateId,
         shapeName: data.shapeName,
-        cuts: data.cuts,
+        bend: data.bend,
         materials: data.materials.map((m) => ({
           material: m.material,
           thickness: m.thickness.map((t) => Number(t.value)),
@@ -204,12 +204,12 @@ export function EditBendingDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cuts">Cuts</Label>
+              <Label htmlFor="bend">Bends</Label>
               <Input
-                id="cuts"
+                id="bend"
                 type="number"
-                {...register("cuts", {
-                  required: "Cuts is required",
+                {...register("bend", {
+                  required: "Bends is required",
                   valueAsNumber: true,
                   min: { value: 0, message: "Must be positive" },
                 })}
