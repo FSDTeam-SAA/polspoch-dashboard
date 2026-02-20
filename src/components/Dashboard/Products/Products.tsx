@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
+import { Plus, Search, Loader2, AlertCircle, Upload } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { useProductDashboard } from "./hooks/useProductDashboard";
 import { ProductTable } from "./components/ProductTable";
 import { ProductPagination } from "./components/ProductPagination";
 import { ProductDialogs } from "./components/ProductDialogs";
+import { BulkUpdateResultsModal } from "./components/BulkUpdateResultsModal";
 
 export default function Products() {
   const {
@@ -43,6 +44,14 @@ export default function Products() {
     handleDeleteClick,
     confirmDelete,
     deletePending,
+
+    // Bulk update
+    isBulkResultsModalOpen,
+    setIsBulkResultsModalOpen,
+    bulkUpdateResults,
+    fileInputRef,
+    isBulkUpdatePending,
+    handleBulkUpdate,
   } = useProductDashboard();
 
   if (isLoading) {
@@ -72,12 +81,34 @@ export default function Products() {
             Manage your product catalog and inventory.
           </p>
         </div>
-        <Link href="/products/add-product">
-          <Button className="shadow-sm cursor-pointer bg-[#7E1800] hover:bg-[#8B2000]">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
+        <div className="flex items-center gap-3">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleBulkUpdate}
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBulkUpdatePending}
+            className="shadow-sm cursor-pointer border-[#7E1800] text-[#7E1800] hover:bg-[#7E1800]/5"
+          >
+            {isBulkUpdatePending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 h-4 w-4" />
+            )}
+            Bulk Update
           </Button>
-        </Link>
+          <Link href="/products/add-product">
+            <Button className="shadow-sm cursor-pointer bg-[#7E1800] hover:bg-[#8B2000]">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card className="shadow-sm border-border/50">
@@ -129,6 +160,12 @@ export default function Products() {
         productToDelete={productToDelete}
         confirmDelete={confirmDelete}
         deletePending={deletePending}
+      />
+
+      <BulkUpdateResultsModal
+        isOpen={isBulkResultsModalOpen}
+        onClose={() => setIsBulkResultsModalOpen(false)}
+        results={bulkUpdateResults}
       />
     </div>
   );
