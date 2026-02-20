@@ -3,6 +3,26 @@
 import axiosInstance from "../instance/axios-instance";
 import { Product } from "../types/product";
 
+export interface BulkUpdateError {
+  productName: string;
+  reference: string;
+  reason: string;
+}
+
+export interface BulkUpdateData {
+  totalRows: number;
+  success: number;
+  failed: number;
+  errors: BulkUpdateError[];
+}
+
+export interface BulkUpdateResponse {
+  success: boolean;
+  message: string;
+  statusCode: number;
+  data: BulkUpdateData;
+}
+
 export interface ProductsResponse {
   success: boolean;
   data: Product[];
@@ -121,12 +141,21 @@ class ProductService {
   /**
    * Delete product image
    */
-  // async deleteImage(publicKey: string): Promise<{ success: boolean }> {
-  //   const response = await axiosInstance.delete<{ success: boolean }>(
-  //     `${this.baseUrl}/image/${publicKey}`
-  //   );
-  //   return response.data;
-  // }
+  /**
+   * Bulk update products via file upload
+   */
+  async bulkUpdateProducts(formData: FormData): Promise<BulkUpdateResponse> {
+    const response = await axiosInstance.put<BulkUpdateResponse>(
+      `${this.baseUrl}/multiple-update`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  }
 }
 
 export const productService = new ProductService();

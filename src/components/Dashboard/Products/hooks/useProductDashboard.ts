@@ -1,6 +1,11 @@
-import { useState, useEffect } from "react";
-import { useProducts, useDeleteProduct } from "@/lib/hooks/useProduct";
+import { useState, useEffect, useRef } from "react";
+import {
+  useProducts,
+  useDeleteProduct,
+  useBulkUpdateProducts,
+} from "@/lib/hooks/useProduct";
 import { Product } from "@/lib/types/product";
+import { BulkUpdateResponse } from "@/lib/services/productService";
 
 export function useProductDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,6 +18,12 @@ export function useProductDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
+  // Bulk update states
+  const [isBulkResultsModalOpen, setIsBulkResultsModalOpen] = useState(false);
+  const [bulkUpdateResults, setBulkUpdateResults] =
+    useState<BulkUpdateResponse | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Search debounce effect
   useEffect(() => {
@@ -32,8 +43,31 @@ export function useProductDashboard() {
   } = useProducts(currentPage, itemsPerPage, debouncedSearch);
 
   const deleteMutation = useDeleteProduct();
+  const bulkUpdateMutation = useBulkUpdateProducts();
 
   const products = response?.data || [];
+
+  const handleBulkUpdate = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const result = await bulkUpdateMutation.mutateAsync(formData);
+      setBulkUpdateResults(result);
+      setIsBulkResultsModalOpen(true);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      console.error("Bulk update handle error:", err);
+    }
+  };
 
   // API Alignment: Use response.meta.totalPages or calculate defensively
   const totalItems =
@@ -87,10 +121,18 @@ export function useProductDashboard() {
     setIsDeleteModalOpen,
     productToDelete,
 
+    // Bulk update states
+    isBulkResultsModalOpen,
+    setIsBulkResultsModalOpen,
+    bulkUpdateResults,
+    fileInputRef,
+    isBulkUpdatePending: bulkUpdateMutation.isPending,
+
     // Actions
     handleViewProduct,
     handleDeleteClick,
     confirmDelete,
     deletePending: deleteMutation.isPending,
+    handleBulkUpdate,
   };
 }
