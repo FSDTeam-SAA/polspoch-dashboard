@@ -9,34 +9,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ShippingPolicy as ShippingPolicyType } from "@/lib/types/shippingPolicy";
-import { ShippingPolicyPayload } from "@/lib/types/shippingPolicy";
+import {
+  ShippingPolicy as ShippingPolicyType,
+  ShippingPolicyPayload,
+} from "@/lib/types/shippingPolicy";
 import {
   useShippingPolicies,
   useUpdateShippingPolicy,
-  useDeleteShippingPolicy,
 } from "@/lib/hooks/useShippingPolicy";
 
 import { ShippingPolicyTable } from "./ShippingPolicyTable";
 import { EditShippingPolicyDialog } from "./EditShippingPolicyDialog";
-import { DeleteShippingPolicyDialog } from "./DeleteShippingPolicyDialog";
 
 export default function ShippingPolicy() {
   // Data
   const { data: policies, isLoading, error } = useShippingPolicies();
   const updateMutation = useUpdateShippingPolicy();
-  const deleteMutation = useDeleteShippingPolicy();
 
   // Edit dialog state
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<ShippingPolicyType | null>(
     null,
   );
-
-  // Delete dialog state
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [deletingPolicy, setDeletingPolicy] =
-    useState<ShippingPolicyType | null>(null);
 
   // Handlers
   function handleEdit(policy: ShippingPolicyType) {
@@ -45,11 +39,11 @@ export default function ShippingPolicy() {
   }
 
   function handleEditSubmit(
-    id: string,
+    methodName: string,
     payload: Partial<ShippingPolicyPayload>,
   ) {
     updateMutation.mutate(
-      { id, payload },
+      { methodName, payload },
       {
         onSuccess: () => {
           setIsEditOpen(false);
@@ -57,21 +51,6 @@ export default function ShippingPolicy() {
         },
       },
     );
-  }
-
-  function handleDeleteClick(policy: ShippingPolicyType) {
-    setDeletingPolicy(policy);
-    setIsDeleteOpen(true);
-  }
-
-  function handleDeleteConfirm() {
-    if (!deletingPolicy) return;
-    deleteMutation.mutate(deletingPolicy._id, {
-      onSuccess: () => {
-        setIsDeleteOpen(false);
-        setDeletingPolicy(null);
-      },
-    });
   }
 
   // Loading state
@@ -114,11 +93,7 @@ export default function ShippingPolicy() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ShippingPolicyTable
-            policies={policies || []}
-            onEdit={handleEdit}
-            onDelete={handleDeleteClick}
-          />
+          <ShippingPolicyTable policies={policies || []} onEdit={handleEdit} />
         </CardContent>
       </Card>
 
@@ -132,17 +107,6 @@ export default function ShippingPolicy() {
         policy={editingPolicy}
         onSubmit={handleEditSubmit}
         isPending={updateMutation.isPending}
-      />
-
-      <DeleteShippingPolicyDialog
-        isOpen={isDeleteOpen}
-        onOpenChange={(open) => {
-          setIsDeleteOpen(open);
-          if (!open) setDeletingPolicy(null);
-        }}
-        policy={deletingPolicy}
-        onConfirm={handleDeleteConfirm}
-        isPending={deleteMutation.isPending}
       />
     </div>
   );
