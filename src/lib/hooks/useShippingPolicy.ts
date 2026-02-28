@@ -23,12 +23,12 @@ export function useUpdateShippingPolicy() {
 
   return useMutation({
     mutationFn: ({
-      id,
+      methodName,
       payload,
     }: {
-      id: string;
+      methodName: string;
       payload: Partial<ShippingPolicyPayload>;
-    }) => shippingPolicyService.update(id, payload),
+    }) => shippingPolicyService.update(methodName, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       toast.success("Shipping policy updated successfully");
@@ -36,23 +36,6 @@ export function useUpdateShippingPolicy() {
     onError: (error: Error) => {
       console.error("Error updating shipping policy:", error);
       toast.error(error.message || "Failed to update shipping policy");
-    },
-  });
-}
-
-/** Delete a shipping policy */
-export function useDeleteShippingPolicy() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => shippingPolicyService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      toast.success("Shipping policy deleted successfully");
-    },
-    onError: (error: Error) => {
-      console.error("Error deleting shipping policy:", error);
-      toast.error(error.message || "Failed to delete shipping policy");
     },
   });
 }

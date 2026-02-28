@@ -1,42 +1,29 @@
 // src/lib/services/shippingPolicyService.ts
 
 import axiosInstance from "../instance/axios-instance";
-import {
-  ShippingPolicy,
-  ShippingPolicyPayload,
-  ShippingPolicyResponse,
-  SingleShippingPolicyResponse,
-} from "../types/shippingPolicy";
+import { ShippingPolicy, ShippingPolicyPayload } from "../types/shippingPolicy";
 
 class ShippingPolicyService {
-  private baseUrl = "/order-shipping";
+  private baseUrl = "/shippingPolicy";
 
   /** Fetch all shipping policies */
   async getAll(): Promise<ShippingPolicy[]> {
-    const response = await axiosInstance.get<ShippingPolicyResponse>(
-      this.baseUrl,
-    );
-    return response.data.data;
-  }
-
-  /** Update a shipping policy by ID */
-  async update(
-    id: string,
-    payload: Partial<ShippingPolicyPayload>,
-  ): Promise<ShippingPolicy> {
-    const response = await axiosInstance.put<SingleShippingPolicyResponse>(
-      `${this.baseUrl}/update/${id}`,
-      payload,
-    );
-    return response.data.data;
-  }
-
-  /** Delete a shipping policy by ID */
-  async delete(id: string): Promise<{ success: boolean }> {
-    const response = await axiosInstance.delete<{ success: boolean }>(
-      `${this.baseUrl}/delete/${id}`,
+    const response = await axiosInstance.get<ShippingPolicy[]>(
+      `${this.baseUrl}/all`,
     );
     return response.data;
+  }
+
+  /** Update a shipping policy by method name */
+  async update(
+    methodName: string,
+    payload: Partial<ShippingPolicyPayload>,
+  ): Promise<ShippingPolicy> {
+    const response = await axiosInstance.patch<{
+      message: string;
+      data: ShippingPolicy;
+    }>(`${this.baseUrl}/${methodName}`, payload);
+    return response.data.data;
   }
 }
 

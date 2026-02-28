@@ -2,21 +2,29 @@
 
 export interface ShippingPolicy {
   _id: string;
-  shippingMethod: string;
-  limits: string;
-  minPrice: number;
-  Extras: string;
-  maxPrice: number;
+  methodName: "courier" | "truck";
+  basePrice: number;
+  freeWeightLimit: number;
+  extraWeightPrice: number;
+  extraWeightStep: number;
+  sizeThreshold: number;
+  sizeSurcharge: number;
+  maxSizeAllowed: number;
+  maxTotalCost: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface ShippingPolicyPayload {
-  shippingMethod: string;
-  limits: string;
-  minPrice: number;
-  Extras: string;
-  maxPrice: number;
+  methodName: "courier" | "truck";
+  basePrice: number;
+  freeWeightLimit: number;
+  extraWeightPrice: number;
+  extraWeightStep: number;
+  sizeThreshold: number;
+  sizeSurcharge: number;
+  maxSizeAllowed: number;
+  maxTotalCost: number;
 }
 
 export interface ShippingPolicyResponse {

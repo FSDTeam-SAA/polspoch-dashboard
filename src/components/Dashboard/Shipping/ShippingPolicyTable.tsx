@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,15 +14,13 @@ import {
 import { ShippingPolicy } from "@/lib/types/shippingPolicy";
 
 interface ShippingPolicyTableProps {
-  policies: ShippingPolicy[];
-  onEdit: (policy: ShippingPolicy) => void;
-  onDelete: (policy: ShippingPolicy) => void;
+  readonly policies: ShippingPolicy[];
+  readonly onEdit: (policy: ShippingPolicy) => void;
 }
 
 export function ShippingPolicyTable({
   policies,
   onEdit,
-  onDelete,
 }: ShippingPolicyTableProps) {
   if (policies.length === 0) {
     return (
@@ -40,12 +38,13 @@ export function ShippingPolicyTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[200px]">Shipping Method</TableHead>
-            <TableHead>Limits</TableHead>
-            <TableHead className="text-center">Min Price (€)</TableHead>
-            <TableHead className="text-center">Max Price (€)</TableHead>
-            <TableHead>Extras</TableHead>
-            <TableHead className="text-center">Updated At</TableHead>
+            <TableHead className="w-[150px]">Method</TableHead>
+            <TableHead className="text-center">Base Price (€)</TableHead>
+            <TableHead className="text-center">Free Weight (kg)</TableHead>
+            <TableHead className="text-center">Extra P/K (€)</TableHead>
+            <TableHead className="text-center">Extra Step</TableHead>
+            <TableHead className="text-center">Max Size (mm)</TableHead>
+            <TableHead className="text-center">Max Cost (€)</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -55,31 +54,32 @@ export function ShippingPolicyTable({
               <TableCell className="font-medium">
                 <Badge
                   variant="outline"
-                  className="text-sm px-3 py-1 font-semibold"
+                  className="text-sm px-3 py-1 font-semibold uppercase"
                 >
-                  {policy.shippingMethod}
+                  {policy.methodName}
                 </Badge>
               </TableCell>
-              <TableCell className="text-muted-foreground">
-                {policy.limits}
-              </TableCell>
               <TableCell className="text-center font-semibold">
-                {policy.minPrice} €
+                {policy.basePrice} €
               </TableCell>
-              <TableCell className="text-center font-semibold">
-                {policy.maxPrice} €
+              <TableCell className="text-center">
+                {policy.methodName === "truck" ? "—" : policy.freeWeightLimit}
               </TableCell>
-              <TableCell className="text-muted-foreground max-w-[250px] truncate">
-                {policy.Extras}
+              <TableCell className="text-center">
+                {policy.methodName === "truck"
+                  ? "—"
+                  : `${policy.extraWeightPrice} €`}
               </TableCell>
-              <TableCell className="text-center text-sm text-muted-foreground">
-                {policy.updatedAt
-                  ? new Date(policy.updatedAt).toLocaleDateString("es-ES", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })
-                  : "-"}
+              <TableCell className="text-center">
+                {policy.methodName === "truck" ? "—" : policy.extraWeightStep}
+              </TableCell>
+              <TableCell className="text-center">
+                {policy.methodName === "truck" ? "—" : policy.maxSizeAllowed}
+              </TableCell>
+              <TableCell className="text-center font-bold text-primary">
+                {policy.methodName === "truck"
+                  ? "—"
+                  : `${policy.maxTotalCost} €`}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
@@ -90,14 +90,6 @@ export function ShippingPolicyTable({
                     className="cursor-pointer h-8 w-8 p-0"
                   >
                     <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDelete(policy)}
-                    className="cursor-pointer h-8 w-8 p-0 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </TableCell>

@@ -5,7 +5,6 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -20,11 +19,14 @@ import {
 } from "@/lib/types/shippingPolicy";
 
 interface EditShippingPolicyDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  policy: ShippingPolicy | null;
-  onSubmit: (id: string, payload: Partial<ShippingPolicyPayload>) => void;
-  isPending: boolean;
+  readonly isOpen: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly policy: ShippingPolicy | null;
+  readonly onSubmit: (
+    methodName: string,
+    payload: Partial<ShippingPolicyPayload>,
+  ) => void;
+  readonly isPending: boolean;
 }
 
 export function EditShippingPolicyDialog({
@@ -37,11 +39,15 @@ export function EditShippingPolicyDialog({
   const getInitialFormData = (
     p: ShippingPolicy | null,
   ): ShippingPolicyPayload => ({
-    shippingMethod: p?.shippingMethod ?? "",
-    limits: p?.limits ?? "",
-    minPrice: p?.minPrice ?? 0,
-    Extras: p?.Extras ?? "",
-    maxPrice: p?.maxPrice ?? 0,
+    methodName: p?.methodName ?? "courier",
+    basePrice: p?.basePrice ?? 0,
+    freeWeightLimit: p?.freeWeightLimit ?? 0,
+    extraWeightPrice: p?.extraWeightPrice ?? 0,
+    extraWeightStep: p?.extraWeightStep ?? 0,
+    sizeThreshold: p?.sizeThreshold ?? 0,
+    sizeSurcharge: p?.sizeSurcharge ?? 0,
+    maxSizeAllowed: p?.maxSizeAllowed ?? 0,
+    maxTotalCost: p?.maxTotalCost ?? 0,
   });
 
   const [formData, setFormData] = useState<ShippingPolicyPayload>(
@@ -61,23 +67,24 @@ export function EditShippingPolicyDialog({
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.shippingMethod.trim()) {
-      newErrors.shippingMethod = "Shipping method is required";
-    }
-    if (!formData.limits.trim()) {
-      newErrors.limits = "Limits field is required";
-    }
-    if (formData.minPrice < 0) {
-      newErrors.minPrice = "Min price cannot be negative";
-    }
-    if (formData.maxPrice < 0) {
-      newErrors.maxPrice = "Max price cannot be negative";
-    }
-    if (formData.maxPrice < formData.minPrice) {
-      newErrors.maxPrice = "Max price must be ≥ Min price";
-    }
-    if (!formData.Extras.trim()) {
-      newErrors.Extras = "Extras field is required";
+    if (formData.basePrice < 0) newErrors.basePrice = "Cannot be negative";
+
+    // Only validate other fields if not truck
+    if (formData.methodName !== "truck") {
+      if (formData.freeWeightLimit < 0)
+        newErrors.freeWeightLimit = "Cannot be negative";
+      if (formData.extraWeightPrice < 0)
+        newErrors.extraWeightPrice = "Cannot be negative";
+      if (formData.extraWeightStep <= 0)
+        newErrors.extraWeightStep = "Must be greater than 0";
+      if (formData.sizeThreshold < 0)
+        newErrors.sizeThreshold = "Cannot be negative";
+      if (formData.sizeSurcharge < 0)
+        newErrors.sizeSurcharge = "Cannot be negative";
+      if (formData.maxSizeAllowed < 0)
+        newErrors.maxSizeAllowed = "Cannot be negative";
+      if (formData.maxTotalCost < 0)
+        newErrors.maxTotalCost = "Cannot be negative";
     }
 
     setErrors(newErrors);
@@ -87,134 +94,219 @@ export function EditShippingPolicyDialog({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!policy || !validate()) return;
-    onSubmit(policy._id, formData);
+    onSubmit(policy.methodName, formData);
   }
+
+  const isTruck = formData.methodName === "truck";
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Shipping Policy</DialogTitle>
           <DialogDescription>
-            Update the details for{" "}
-            <span className="font-semibold text-foreground">
-              {policy?.shippingMethod || "this policy"}
+            Update the pricing rules for{" "}
+            <span className="font-bold text-foreground uppercase">
+              {policy?.methodName || "this policy"}
             </span>
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 py-2">
-          {/* Shipping Method */}
-          <div className="space-y-2">
-            <Label htmlFor="shippingMethod">Shipping Method</Label>
-            <Input
-              id="shippingMethod"
-              value={formData.shippingMethod}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  shippingMethod: e.target.value,
-                }))
-              }
-              placeholder="e.g. Standard Delivery"
-            />
-            {errors.shippingMethod && (
-              <p className="text-xs text-destructive">
-                {errors.shippingMethod}
-              </p>
-            )}
-          </div>
-
-          {/* Limits */}
-          <div className="space-y-2">
-            <Label htmlFor="limits">Limits</Label>
-            <Input
-              id="limits"
-              value={formData.limits}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, limits: e.target.value }))
-              }
-              placeholder="e.g. Within 5kg"
-            />
-            {errors.limits && (
-              <p className="text-xs text-destructive">{errors.limits}</p>
-            )}
-          </div>
-
-          {/* Pricing Row */}
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          {/* Base Price & Free Weight (Free weight hidden for truck) */}
+          <div className={isTruck ? "space-y-2" : "grid grid-cols-2 gap-4"}>
             <div className="space-y-2">
-              <Label htmlFor="minPrice">Min Price (€)</Label>
+              <Label htmlFor="basePrice">Base Price (€)</Label>
               <Input
-                id="minPrice"
+                id="basePrice"
                 type="number"
-                min={0}
                 step="0.01"
-                value={formData.minPrice}
+                value={formData.basePrice}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    minPrice: parseFloat(e.target.value) || 0,
+                    basePrice: Number.parseFloat(e.target.value) || 0,
                   }))
                 }
               />
-              {errors.minPrice && (
-                <p className="text-xs text-destructive">{errors.minPrice}</p>
+              {errors.basePrice && (
+                <p className="text-xs text-destructive">{errors.basePrice}</p>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxPrice">Max Price (€)</Label>
-              <Input
-                id="maxPrice"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.maxPrice}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    maxPrice: parseFloat(e.target.value) || 0,
-                  }))
-                }
-              />
-              {errors.maxPrice && (
-                <p className="text-xs text-destructive">{errors.maxPrice}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Extras */}
-          <div className="space-y-2">
-            <Label htmlFor="Extras">Extras / Notes</Label>
-            <Textarea
-              id="Extras"
-              value={formData.Extras}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, Extras: e.target.value }))
-              }
-              placeholder="e.g. Delivery within 5-7 business days"
-              rows={3}
-            />
-            {errors.Extras && (
-              <p className="text-xs text-destructive">{errors.Extras}</p>
+            {!isTruck && (
+              <div className="space-y-2">
+                <Label htmlFor="freeWeightLimit">Free Weight Limit (kg)</Label>
+                <Input
+                  id="freeWeightLimit"
+                  type="number"
+                  value={formData.freeWeightLimit}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      freeWeightLimit: Number.parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                />
+                {errors.freeWeightLimit && (
+                  <p className="text-xs text-destructive">
+                    {errors.freeWeightLimit}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          {!isTruck && (
+            <>
+              {/* Extra Weight Pricing */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="extraWeightPrice">
+                    Extra Weight Price (€)
+                  </Label>
+                  <Input
+                    id="extraWeightPrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.extraWeightPrice}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        extraWeightPrice:
+                          Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.extraWeightPrice && (
+                    <p className="text-xs text-destructive">
+                      {errors.extraWeightPrice}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="extraWeightStep">
+                    Extra Weight Step (kg)
+                  </Label>
+                  <Input
+                    id="extraWeightStep"
+                    type="number"
+                    value={formData.extraWeightStep}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        extraWeightStep: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.extraWeightStep && (
+                    <p className="text-xs text-destructive">
+                      {errors.extraWeightStep}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Size Limits & Surcharge */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sizeThreshold">Size Threshold (mm)</Label>
+                  <Input
+                    id="sizeThreshold"
+                    type="number"
+                    value={formData.sizeThreshold}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        sizeThreshold: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.sizeThreshold && (
+                    <p className="text-xs text-destructive">
+                      {errors.sizeThreshold}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sizeSurcharge">Size Surcharge (€)</Label>
+                  <Input
+                    id="sizeSurcharge"
+                    type="number"
+                    step="0.01"
+                    value={formData.sizeSurcharge}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        sizeSurcharge: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.sizeSurcharge && (
+                    <p className="text-xs text-destructive">
+                      {errors.sizeSurcharge}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Max Size & Max Cost */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="maxSizeAllowed">Max Size Allowed (mm)</Label>
+                  <Input
+                    id="maxSizeAllowed"
+                    type="number"
+                    value={formData.maxSizeAllowed}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        maxSizeAllowed: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.maxSizeAllowed && (
+                    <p className="text-xs text-destructive">
+                      {errors.maxSizeAllowed}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxTotalCost">Max Total Cost (€)</Label>
+                  <Input
+                    id="maxTotalCost"
+                    type="number"
+                    step="0.01"
+                    value={formData.maxTotalCost}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        maxTotalCost: Number.parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                  />
+                  {errors.maxTotalCost && (
+                    <p className="text-xs text-destructive">
+                      {errors.maxTotalCost}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          <DialogFooter className="gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isPending}
-              className="cursor-pointer"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isPending}
-              className="cursor-pointer bg-[#7E1800] hover:bg-[#8B2000]"
+              className="bg-[#7E1800] hover:bg-[#8B2000]"
             >
               {isPending ? (
                 <>
