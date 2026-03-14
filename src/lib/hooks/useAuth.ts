@@ -2,7 +2,8 @@
 
 // src/lib/hooks/useAuth.ts
 "use client";
-
+import axiosInstance from "../instance/axios-instance";
+import { AxiosError } from "axios";
 import { useState } from "react";
 import {
   forgotPassword,
@@ -10,6 +11,7 @@ import {
   resetPassword,
   verifyOtp,
 } from "../services/authService";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export default function useAuth() {
   const [loading, setLoading] = useState(false);
@@ -122,3 +124,46 @@ export default function useAuth() {
     handleResetPassword,
   };
 }
+
+// GET method /all-users
+
+export const useGetAllUsers = () => {
+  return useQuery({
+    queryKey: ["all-users"],
+    queryFn: async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axiosInstance.get("/user/all-users", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      return res.data;
+    },
+  });
+};
+
+// PATCH method /update-user/:id/role
+
+export const useUpdateUser = () => {
+  return useMutation<
+    { success: boolean; message?: string },
+    AxiosError<{ message?: string }>,
+    { id: string; data: { role: string } }
+  >({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { role: string };
+    }) => {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axiosInstance.patch(`/user/${id}/role`, data, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      return res.data;
+    },
+  });
+};
