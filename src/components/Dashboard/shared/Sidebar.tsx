@@ -35,6 +35,7 @@ const navigation = [
   { name: "Orders", href: "/orders", icon: ShoppingBasket },
   { name: "Family", href: "/family", icon: Gift },
   { name: "Shipping Policy", href: "/shippingPolicy", icon: NotebookText },
+  { name: "Users", href: "/users", icon: ShieldUser },
   // { name: "Payments", href: "/payments", icon: CircleDollarSign },
 ];
 
