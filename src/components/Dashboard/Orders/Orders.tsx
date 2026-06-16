@@ -26,7 +26,7 @@ const ITEMS_PER_PAGE = 8;
 
 export default function Orders() {
   const { data: orders = [], isLoading, error } = useOrders();
-  console.log(orders);
+  // console.log(orders);
   const deleteMutation = useDeleteOrders();
   const [activeTab, setActiveTab] = useState("services");
   const [currentPage, setCurrentPage] = useState(1);
