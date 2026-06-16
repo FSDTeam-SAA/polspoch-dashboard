@@ -55,10 +55,18 @@ export interface ProductDetails {
   measureUnit: string;
   minRange: number | null;
   maxRange: number | null;
+  size?: number;
+  size2?: number;
   range?: number;
   unitSizeCustomizationNote: string;
   unitSize?: number;
   length?: number;
+  thickness?: number;
+  finishQualitySelected?: string;
+  totalWeight?: number;
+  maxDimensionDetected?: number;
+  shippingPrice?: number;
+  shippingMethod?: string;
   selectedFeature?: SelectedFeature;
   createdAt: string;
   updatedAt: string;
@@ -90,6 +98,9 @@ export interface CartItem {
     totalWidth?: number;
     internalCuts?: number;
     totalWeight?: number;
+    maxDimensionDetected?: number;
+    shippingPrice?: number;
+    shippingMethod?: string;
     degrees?: {
       degree1?: number;
       degree2?: number;

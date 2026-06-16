@@ -21,16 +21,22 @@ interface ProductOrderDetailsModalProps {
 
 export function ProductOrderDetailsContent({ order }: { order: Order }) {
   // Filter to show only products
-  const cartItems = (order.cartItems || []).filter(
-    (item) => item.type === "product",
-  );
+  const cartItems = (order.cartItems || []).filter((item) => {
+    const actualItem = item.cartId || item;
+    return actualItem.type === "product";
+  });
   const cartItemCount = cartItems.length;
 
   // Gather all images from product items
   const itemImages: string[] = [];
   cartItems.forEach((item) => {
-    if (item.product?.productImage) {
-      item.product.productImage.forEach((img: { url: string }) =>
+    const actualItem = item.cartId || item;
+    const images =
+      actualItem.product?.productId?.productImage ||
+      actualItem.product?.productImage;
+
+    if (images) {
+      images.forEach((img: { url: string }) =>
         itemImages.push(img.url),
       );
     }
@@ -144,18 +150,40 @@ export function ProductOrderDetailsContent({ order }: { order: Order }) {
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
             {cartItems.map((item: CartItem) => {
               const actualItem = item.cartId || item;
-              const itemName = actualItem.product?.productName;
+              const itemName =
+                actualItem.product?.productId?.productName ||
+                actualItem.product?.productName;
+
+              const selectedFeature =
+                actualItem.product?.selectedFeature || actualItem.selectedFeature;
 
               const itemData = {
-                Family: actualItem.product?.family || "N/A",
-                "Unit Size": actualItem.unitSize || "N/A",
-                "Measure Unit": actualItem.product?.measureUnit || "N/A",
-                Reference: actualItem.selectedFeature?.reference || "N/A",
-                "Size 1": actualItem.selectedFeature?.size1 || "N/A",
-                "Size 2": actualItem.selectedFeature?.size2 || "N/A",
-                Thickness: actualItem.selectedFeature?.thickness || "N/A",
+                "Product Name": itemName || "Custom Product",
+                Reference: selectedFeature?.reference || "N/A",
+                "Size 1":
+                  actualItem.product?.size ?? selectedFeature?.size1 ?? "N/A",
+                "Size 2":
+                  actualItem.product?.size2 ?? selectedFeature?.size2 ?? "N/A",
+                Thickness:
+                  actualItem.product?.thickness ??
+                  selectedFeature?.thickness ??
+                  "N/A",
                 "Finish Quality":
-                  actualItem.selectedFeature?.finishQuality || "N/A",
+                  actualItem.product?.finishQualitySelected ||
+                  selectedFeature?.finishQuality ||
+                  "N/A",
+                "Selected Length":
+                  actualItem.product?.length !== undefined
+                    ? `${actualItem.product.length}mm`
+                    : "N/A",
+                "Unit Size":
+                  actualItem.product?.unitSize !== undefined
+                    ? `${actualItem.product.unitSize}m`
+                    : "N/A",
+                Range:
+                  actualItem.product?.range !== undefined
+                    ? `${actualItem.product.range}m`
+                    : "N/A",
                 Quantity: actualItem.quantity || "N/A",
                 "Total Amount": actualItem.totalAmount
                   ? `€${actualItem.totalAmount.toLocaleString()}`
